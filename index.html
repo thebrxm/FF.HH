@@ -23,6 +23,7 @@
     --rojo: #ed1e2e;
     --amarillo: #fbbd2e;
     --verde: #2b9145;
+    --purple: #6c5ce7;
   }
 
   * { box-sizing: border-box; }
@@ -61,7 +62,6 @@
     margin-top: 5px;
   }
 
-  /* Layout de Filas y Columnas */
   .row { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px; }
   .col { flex: 1; min-width: 350px; display: flex; flex-direction: column; }
 
@@ -69,7 +69,7 @@
     background: white;
     border-radius: 16px;
     padding: 25px;
-    height: 100%; /* Para que las tarjetas en la misma fila tengan igual altura */
+    height: 100%;
     box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     border: 1px solid #e1e8f0;
   }
@@ -92,7 +92,6 @@
     width: 100%; padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 10px; font-size: 14px;
   }
 
-  /* Botones de selección */
   .btn-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
   .btn-opt {
     background: white; border: 1px solid var(--border-color); padding: 10px 12px; border-radius: 10px;
@@ -103,7 +102,6 @@
   .btn-opt.amarillo.selected { background: var(--amarillo); border-color: var(--amarillo); color: #000; }
   .btn-opt.verde.selected { background: var(--verde); border-color: var(--verde); }
 
-  /* Checkboxes estilizados */
   .check-box-group { display: flex; flex-wrap: wrap; gap: 8px; }
   .check-item { display: none; }
   .check-label {
@@ -114,29 +112,31 @@
 
   .signature-box { border: 2px dashed var(--primary); border-radius: 12px; width: 100%; height: 160px; background: #fafafa; }
 
-  .actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+  .actions { display: flex; justify-content: flex-end; gap: 10px; margin: 30px 0; }
   .btn-action { padding: 12px 20px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; color: white; }
   .btn-copy { background: #6c757d; }
   .btn-preview { background: var(--verde); }
   .btn-generate { background: var(--primary); }
+  .btn-save-bd { background: var(--purple); }
 
-  @media (max-width: 850px) { .col { min-width: 100%; } }
+  @media (max-width: 850px) { .col { min-width: 100%; } .actions { flex-direction: column; } }
 </style>
 </head>
 <body>
 
+<div class="container">
   <header>
-   <img src="https://i.imgur.com/EsZiIHa.jpeg" class="logo-placeholder" alt="Logo SAME">
+    <img src="https://i.imgur.com/EsZiIHa.jpeg" class="logo-placeholder" alt="Logo SAME">
     <div class="title-container">
       <h1>Factores <span>Humanos</span></h1>
       <div class="sub-title">REPORTE DE INCIDENTE - SAME BUENOS AIRES - ARGENTINA</div>
     </div>
     <div style="width:60px"></div>
- </header>
+  </header>
 
-<section class="card" style="margin-bottom: 15px; padding: 12px 20px; border-left: 5px solid #6c5ce7;">
+  <section class="card" style="margin-bottom: 20px; padding: 12px 20px; border-left: 5px solid var(--purple);">
     <div style="display: flex; align-items: center; gap: 15px;">
-        <div style="white-space: nowrap; font-weight: 800; font-size: 11px; color: #6c5ce7;">
+        <div style="white-space: nowrap; font-weight: 800; font-size: 11px; color: var(--purple);">
             <span style="font-size: 16px;">📁</span> BUSCAR
         </div>
         <div style="flex-grow: 1; position: relative;">
@@ -144,18 +144,10 @@
                    style="padding: 6px 12px; font-size: 13px; border-radius: 8px;">
             <datalist id="lista-pacientes"></datalist>
         </div>
-        <button type="button" id="btn-cargar" class="btn-opt verde" style="padding: 6px 20px; margin:0;">CARGAR</button>
+        <button type="button" id="btn-cargar" class="btn-opt verde" style="padding: 8px 20px; margin:0;">CARGAR</button>
     </div>
-</section>
+  </section>
 
-<div class="actions">
-    <button class="btn-action" id="btn-guardar-bd" style="background: #6c5ce7;">GUARDAR PACIENTE</button>
-    <button class="btn-action btn-copy" id="btn-copy">COPIAR TEXTO</button>
-    <button class="btn-action btn-preview" id="btn-preview">VISTA PREVIA PDF</button>
-    <button class="btn-action btn-generate" id="btn-download">GENERAR PDF</button>
-</div>
-
-  <!-- FILA 1: DATOS + IDENTIFICACIÓN -->
   <div class="row">
     <div class="col">
       <section class="card">
@@ -187,7 +179,7 @@
         <input type="text" id="nombreApellido" placeholder="Ej.: Juan Perez" style="margin-bottom:10px;">
         <div class="row" style="gap:10px;">
           <div style="flex:1"><label class="bold">DNI</label><input type="text" placeholder="Ej.: 12345678" id="dni"></div>
-          <div style="flex:1"><label class="bold">Edad</label><input type="number" placeholder="Ej.: 21 años" id="edad"></div>
+          <div style="flex:1"><label class="bold">Edad</label><input type="number" placeholder="Ej.: 21" id="edad"></div>
         </div>
         <div style="margin-top:10px;">
           <label class="bold">Sexo/Género</label>
@@ -201,7 +193,6 @@
     </div>
   </div>
 
-  <!-- SECCIÓN 3: LUGAR (ANCHO COMPLETO) -->
   <section class="card" style="margin-bottom:20px;">
     <div class="section-header"><div class="icon">3</div> LUGAR / UBICACIÓN</div>
     <div class="row">
@@ -224,7 +215,6 @@
     </div>
     <div class="row" style="margin-top:15px;">
       <div class="col" style="flex: 2;">
-        <label class="bold"></label>
         <div class="check-box-group">
           <input type="checkbox" id="c1" class="check-item" name="acompa" value="En compañía del chofer"><label for="c1" class="check-label">En compañía del chofer</label>
           <input type="checkbox" id="c2" class="check-item" name="acompa" value="En compañía de equipo"><label for="c2" class="check-label">En compañía de equipo</label>
@@ -242,7 +232,6 @@
     <div style="margin-top:15px"><label class="bold">Dirección Exacta</label><input type="text" placeholder="Ej.: Avenida Córdoba 2102" id="direccion"></div>
   </section>
 
-  <!-- SECCIÓN 4: VALORACIÓN (ANCHO COMPLETO) -->
   <section class="card" style="margin-bottom:20px;">
     <div class="section-header"><div class="icon">4</div> VALORACIÓN CLÍNICA (TRIAGE)</div>
     <div class="btn-group">
@@ -257,7 +246,6 @@
     </div>
   </section>
 
-  <!-- FILA 2: PRESTACIÓN + PROSECUCIÓN -->
   <div class="row">
     <div class="col">
       <section class="card">
@@ -283,7 +271,6 @@
         <div class="section-header"><div class="icon">6</div> PROSECUCIÓN</div>
         <label class="bold">Derivación</label>
         <input type="text" id="deriva_comentario" placeholder="Ej.: Hospital" style="margin-bottom:15px;">
-        <label class="bold"></label>
         <div class="check-box-group">
           <input type="checkbox" name="deriva" id="d1" class="check-item" value="Psicoterapia"><label for="d1" class="check-label">Psicoterapia</label>
           <input type="checkbox" name="deriva" id="d2" class="check-item" value="Psiquiatria"><label for="d2" class="check-label">Psiquiatria</label>
@@ -295,11 +282,10 @@
     </div>
   </div>
 
-  <!-- FILA 3: SEGUIMIENTOS + FIRMA -->
   <div class="row">
     <div class="col">
       <section class="card">
-        <div class="section-header"><div class="icon">7</div> SEGUIMIENTOS POSTINCIDENTE</div>
+        <div class="section-header"><div class="icon">7</div> SEGUIMIENTOS</div>
         <div class="check-box-group" style="margin-bottom:15px;">
           <input type="checkbox" id="seg_primera" class="check-item" value="PRIMERA VEZ"><label for="seg_primera" class="check-label">PRIMERA VEZ</label>
           <input type="checkbox" id="seg_ulteriores" class="check-item" value="ULTERIORES"><label for="seg_ulteriores" class="check-label">ULTERIORES</label>
@@ -309,9 +295,7 @@
             <input type="checkbox" name="ult_op" id="u1" class="check-item" value="1 SEMANA"><label for="u1" class="check-label">1 SEMANA</label>
             <input type="checkbox" name="ult_op" id="u2" class="check-item" value="1 MES"><label for="u2" class="check-label">1 MES</label>
             <input type="checkbox" name="ult_op" id="u3" class="check-item" value="3 MESES"><label for="u3" class="check-label">3 MESES</label>
-            <input type="checkbox" name="ult_op" id="u4" class="check-item" value="OTRO"><label for="u4" class="check-label">OTRO</label>
           </div>
-          <input type="text" id="ult_otro" placeholder="Especifique..." style="display:none; margin-top:10px">
         </div>
         <label class="bold">Observaciones</label>
         <textarea id="observaciones" rows="3"></textarea>
@@ -326,6 +310,14 @@
       </section>
     </div>
   </div>
+
+  <div class="actions">
+    <button class="btn-action btn-save-bd" id="btn-guardar-bd">GUARDAR PACIENTE</button>
+    <button class="btn-action btn-copy" id="btn-copy">COPIAR TEXTO</button>
+    <button class="btn-action btn-preview" id="btn-preview">VISTA PREVIA PDF</button>
+    <button class="btn-action btn-generate" id="btn-download">GENERAR PDF</button>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
@@ -347,6 +339,7 @@
     initTriage();
     initSignature();
     initLogic();
+    actualizarDatalist();
     generarCronica();
   });
 
@@ -421,10 +414,6 @@
         document.getElementById('ulteriores-box').style.display = e.target.checked ? 'block' : 'none';
         generarCronica();
     };
-    document.getElementById('u4').onchange = (e) => {
-        document.getElementById('ult_otro').style.display = e.target.checked ? 'block' : 'none';
-        generarCronica();
-    };
     document.querySelectorAll('input, textarea, select').forEach(el => {
         if(el.id !== 'cronica') el.addEventListener('input', generarCronica);
     });
@@ -476,7 +465,7 @@
     if(document.getElementById('seg_ulteriores').checked) {
         let ults = [];
         document.querySelectorAll('[name="ult_op"]:checked').forEach(u => ults.push(u.value));
-        segs.push(`ULTERIORES (${ults.join(', ')}${ults.includes('OTRO')?': '+val('ult_otro'):''})`);
+        segs.push(`ULTERIORES (${ults.join(', ')})`);
     }
     texto += `Estado: ${segs.join(' / ') || 'No especificado'}\n`;
     texto += `Observaciones: ${val('observaciones') || 'Sin observaciones'}`;
@@ -493,8 +482,8 @@
     canvas.height = canvas.offsetHeight;
     const getPos = e => {
       const rect = canvas.getBoundingClientRect();
-      const clientX = e.clientX || e.touches[0].clientX;
-      const clientY = e.clientY || e.touches[0].clientY;
+      const clientX = (e.clientX || (e.touches && e.touches[0].clientX));
+      const clientY = (e.clientY || (e.touches && e.touches[0].clientY));
       return { x: clientX - rect.left, y: clientY - rect.top };
     };
     const start = e => { drawing = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); };
@@ -506,200 +495,14 @@
     document.getElementById('clear-sig').onclick = () => ctx.clearRect(0,0,canvas.width,canvas.height);
   }
 
+  // --- LOGICA BOTONES ACCION ---
+
   document.getElementById('btn-copy').onclick = () => {
     navigator.clipboard.writeText(document.getElementById('cronica').value);
     alert('Texto copiado!');
   };
 
-  async function createPDF() {
-    const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: "pt", format: "a4" });
-  const pageWidth = doc.internal.pageSize.width;
-  const pageHeight = doc.internal.pageSize.height;
-  const margin = 40;
-  let y = 40;
-
-  const colorPrimario = [23, 85, 244]; 
-  const colorFondoCaja = [238, 244, 255]; 
-  const colorTextoGris = [120, 130, 140];
-  const colorTextoNegro = [0, 0, 0];
-
-  async function loadImage(url) {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0);
-        resolve(canvas.toDataURL("image/png"));
-      };
-      img.src = url;
-    });
-  }
-
-  const logoBase64 = await loadImage("https://i.imgur.com/EsZiIHa.jpeg");
-
-  // --- HEADER ---
-  doc.addImage(logoBase64, "PNG", margin, y - 5, 45, 45);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(24);
-  doc.setTextColor(45, 52, 54);
-  doc.text("Factores", margin + 55, y + 18);
-  doc.setTextColor(colorPrimario[0], colorPrimario[1], colorPrimario[2]);
-  doc.text("Humanos", margin + 155, y + 18);
-
-  y += 28;
-  const subTitle = "REPORTE DE INCIDENTE - SAME Buenos Aires - Argentina";
-  doc.setFontSize(9);
-  const subW = doc.getTextWidth(subTitle) + 20;
-  doc.setFillColor(colorPrimario[0], colorPrimario[1], colorPrimario[2]);
-  doc.roundedRect(margin + 55, y, subW, 16, 4, 4, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.text(subTitle, margin + 65, y + 11);
-
-  y += 50;
-
-  // --- DATOS ---
-  doc.setFontSize(10);
-  doc.setTextColor(150);
-  doc.text("DATOS", margin, y);
-  y += 10;
-  doc.setFillColor(colorFondoCaja[0], colorFondoCaja[1], colorFondoCaja[2]);
-  doc.roundedRect(margin, y, pageWidth - (margin * 2), 45, 12, 12, "F");
-
-  const colW = (pageWidth - (margin * 2)) / 4;
-  const etiquetasDatos = ["ÁMBITO DE ACTUACIÓN", "FUNCIÓN", "AÑOS", "REFERENTE"];
-  const valoresDatos = [state.ambito || "---", document.getElementById('funcion').value || "---", document.getElementById('anios').value || "---", document.getElementById('referente').value || "---"];
-
-  etiquetasDatos.forEach((et, i) => {
-    doc.setFontSize(7);
-    doc.setTextColor(150);
-    doc.text(et, margin + (colW * i) + 15, y + 18);
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(0);
-    doc.text(String(valoresDatos[i]).toUpperCase(), margin + (colW * i) + 15, y + 32);
-  });
-
-  y += 65;
-
-  // --- IDENTIFICACIÓN Y ESCENARIO ---
-  const boxW = (pageWidth - (margin * 2) - 15) / 2;
-  const boxH = 90;
-
-  // Caja Identificación
-  doc.setFillColor(colorFondoCaja[0], colorFondoCaja[1], colorFondoCaja[2]);
-  doc.roundedRect(margin, y, boxW, boxH, 12, 12, "F");
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "bold"); // Título en Negrita
-  doc.setTextColor(colorPrimario[0], colorPrimario[1], colorPrimario[2]);
-  doc.text("IDENTIFICACIÓN DEL PACIENTE", margin + 15, y + 18);
-  doc.setDrawColor(colorPrimario[0], colorPrimario[1], colorPrimario[2]);
-  doc.line(margin + 15, y + 23, margin + boxW - 15, y + 23);
-
-  doc.setFontSize(14);
-  doc.setTextColor(0);
-  doc.text((document.getElementById('nombreApellido').value || "SIN NOMBRE").toUpperCase(), margin + 15, y + 45);
-
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(colorTextoGris[0], colorTextoGris[1], colorTextoGris[2]);
-  // MEJORA: Más espacio entre DNI, Edad y Sexo
-  doc.text(`DNI: ${document.getElementById('dni').value || "---"}`, margin + 15, y + 65);
-  doc.text(`EDAD: ${document.getElementById('edad').value || "--"}`, margin + 100, y + 65);
-  doc.text(`SEXO: ${state.sexo || "-"}`, margin + 175, y + 65);
-
-  // Caja Escenario
-  doc.setFillColor(colorFondoCaja[0], colorFondoCaja[1], colorFondoCaja[2]);
-  doc.roundedRect(margin + boxW + 15, y, boxW, boxH, 12, 12, "F");
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "bold"); // Título en Negrita
-  doc.setTextColor(colorPrimario[0], colorPrimario[1], colorPrimario[2]);
-  doc.text("DATOS DEL ESCENARIO", margin + boxW + 30, y + 18);
-  doc.line(margin + boxW + 30, y + 23, margin + (boxW * 2) + 15 - 15, y + 23);
-
-  // MEJORA: Dirección en Negrita y Grande
-  const direccion = document.getElementById('direccion').value || "No especificada";
-  doc.setFontSize(13);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(0);
-  const dirLines = doc.splitTextToSize(direccion.toUpperCase(), boxW - 45);
-  doc.text(dirLines, margin + boxW + 30, y + 42);
-
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(colorTextoGris[0], colorTextoGris[1], colorTextoGris[2]);
-  doc.text(`FECHA: ${document.getElementById('fecha').value || "---"}`, margin + boxW + 30, y + 65);
-  doc.text(`HORA: ${document.getElementById('hora').value || "---"}`, margin + boxW + 140, y + 65);
-
-  y += boxH + 30;
-
-  // --- TRIAGE COLOREADO ---
-  let colorTriage = [210, 220, 230]; // Gris por defecto
-  let textoTriage = Array.from(state.triage).join(" / ").toUpperCase() || "PENDIENTE";
-  
-  // Lógica de colores según selección
-  if(state.triage.has('rojo')) colorTriage = [237, 30, 46];
-  else if(state.triage.has('amarillo')) colorTriage = [251, 189, 46];
-  else if(state.triage.has('verde')) colorTriage = [43, 145, 69];
-
-  doc.setFillColor(colorTriage[0], colorTriage[1], colorTriage[2]);
-  doc.roundedRect(margin, y, 120, 18, 9, 9, "F");
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.setTextColor(state.triage.has('amarillo') ? 0 : 255); // Texto negro si es amarillo para contraste
-  doc.text(`TRIAGE: ${textoTriage}`, margin + 10, y + 12);
-
-  y += 35;
-
-  // --- CRÓNICA ---
-  doc.setFontSize(9);
-  doc.setTextColor(150);
-  doc.text("DESCRIPCIÓN DEL INCIDENTE", margin, y);
-  y += 15;
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(0);
-  const cronicaLines = doc.splitTextToSize(document.getElementById('cronica').value, pageWidth - (margin * 2));
-  doc.text(cronicaLines, margin, y);
-
-  // --- FIRMA ---
-  const sigX = pageWidth - margin - 180;
-  const sigY = pageHeight - margin - 90 - 20;
-  doc.setDrawColor(colorPrimario[0], colorPrimario[1], colorPrimario[2]);
-  doc.roundedRect(sigX, sigY, 180, 90, 15, 15, "S");
-  doc.addImage(canvas.toDataURL("image/png"), "PNG", sigX + 10, sigY + 10, 160, 60);
-  doc.setFontSize(8);
-  doc.setTextColor(150);
-  doc.text("FIRMA", sigX + 90, sigY + 80, { align: "center" });
-
-  return doc;
-}
-
-// Corregir también la apertura de Vista Previa para que sea más compatible
-document.getElementById('btn-preview').onclick = async () => {
-    const doc = await generarContenidoPDF();
-    const blob = doc.output('blob');
-    const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
-};
-
-  document.getElementById('btn-preview').onclick = async () => {
-    const doc = await createPDF();
-    window.open(doc.output('bloburl'), '_blank');
-  };
-
-  document.getElementById('btn-download').onclick = async () => {
-    const doc = await createPDF();
-    doc.save("Reporte_SAME_FH.pdf");
-  };
-  
-  // --- LÓGICA DE BANCO DE DATOS ---
-
-// Guardar paciente actual en LocalStorage
-document.getElementById('btn-guardar-bd').onclick = () => {
+  document.getElementById('btn-guardar-bd').onclick = () => {
     const dni = document.getElementById('dni').value;
     if (!dni) return alert("Por favor, ingrese un DNI para identificar al paciente.");
 
@@ -719,15 +522,13 @@ document.getElementById('btn-guardar-bd').onclick = () => {
     localStorage.setItem('same_pacientes', JSON.stringify(bd));
     
     actualizarDatalist();
-    alert("Paciente guardado con éxito en el banco de datos local.");
-};
+    alert("Paciente guardado exitosamente en el banco de datos.");
+    resetearFormulario();
+  };
 
-// Cargar datos de un paciente seleccionado
-document.getElementById('btn-cargar').onclick = () => {
+  document.getElementById('btn-cargar').onclick = () => {
     const busqueda = document.getElementById('buscador-paciente').value;
     const bd = JSON.parse(localStorage.getItem('same_pacientes') || '{}');
-    
-    // Buscar por DNI exacto o encontrar el DNI si el usuario seleccionó del datalist
     const dni = busqueda.includes(" | DNI: ") ? busqueda.split(" | DNI: ")[1] : busqueda;
     const p = bd[dni];
 
@@ -739,22 +540,20 @@ document.getElementById('btn-cargar').onclick = () => {
         document.getElementById('anios').value = p.anios;
         document.getElementById('referente').value = p.referente;
         
-        // Cargar estados de botones
         state.sexo = p.sexo;
         state.ambito = p.ambito;
         
-        // Visualmente actualizar botones
         actualizarBotonesSeleccionados('sexo-group', p.sexo);
         actualizarBotonesSeleccionados('ambito-group', p.ambito);
         
         generarCronica();
-        alert("Datos cargados.");
+        alert("Datos del paciente cargados.");
     } else {
         alert("Paciente no encontrado.");
     }
-};
+  };
 
-function actualizarDatalist() {
+  function actualizarDatalist() {
     const datalist = document.getElementById('lista-pacientes');
     const bd = JSON.parse(localStorage.getItem('same_pacientes') || '{}');
     datalist.innerHTML = '';
@@ -763,51 +562,129 @@ function actualizarDatalist() {
         option.value = `${p.nombre} | DNI: ${p.dni}`;
         datalist.appendChild(option);
     });
-}
+  }
 
-function actualizarBotonesSeleccionados(groupId, value) {
+  function actualizarBotonesSeleccionados(groupId, value) {
     const container = document.getElementById(groupId);
     container.querySelectorAll('button').forEach(b => {
         b.classList.remove('selected');
         if(b.dataset.value === value) b.classList.add('selected');
     });
-}
+  }
 
-// Llamar al cargar la página
-actualizarDatalist();
-
-function resetearFormulario() {
-    // 1. Limpiar inputs y textareas
+  function resetearFormulario() {
     document.querySelectorAll('input:not([type="button"]), textarea, select').forEach(el => el.value = '');
-    
-    // 2. Resetear el estado interno (Triage y Manifestaciones)
     state.triage.clear();
     state.manifestaciones.rojo.clear();
     state.manifestaciones.amarillo.clear();
     state.manifestaciones.verde.clear();
     state.sexo = '';
     state.ambito = '';
-
-    // 3. Quitar clases 'selected' de todos los botones
     document.querySelectorAll('.btn-opt').forEach(btn => btn.classList.remove('selected'));
-
-    // 4. Limpiar firma
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // 5. Ocultar campos condicionales
+    if(ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
     document.getElementById('categoria_otros').style.display = 'none';
     document.getElementById('deriva_otro').style.display = 'none';
     document.getElementById('ulteriores-box').style.display = 'none';
     document.getElementById('manifestaciones-container').innerHTML = '';
-
-    // 6. Actualizar la crónica (quedará vacía o con placeholders)
-    generarCronica();
-    
-    // 7. Limpiar buscador
     document.getElementById('buscador-paciente').value = '';
-    
-    console.log("Formulario reseteado.");
-}
+    generarCronica();
+  }
+
+  // --- PDF LOGIC ---
+
+  async function createPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+    const margin = 40;
+    let y = 40;
+
+    const colorPrimario = [23, 85, 244]; 
+    const colorFondoCaja = [238, 244, 255]; 
+    const colorTextoGris = [120, 130, 140];
+
+    async function loadImage(url) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          const canvasImg = document.createElement("canvas");
+          canvasImg.width = img.width;
+          canvasImg.height = img.height;
+          const ctxImg = canvasImg.getContext("2d");
+          ctxImg.drawImage(img, 0, 0);
+          resolve(canvasImg.toDataURL("image/png"));
+        };
+        img.src = url;
+      });
+    }
+
+    const logoBase64 = await loadImage("https://i.imgur.com/EsZiIHa.jpeg");
+
+    doc.addImage(logoBase64, "PNG", margin, y - 5, 45, 45);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.setTextColor(45, 52, 54);
+    doc.text("Factores", margin + 55, y + 18);
+    doc.setTextColor(colorPrimario[0], colorPrimario[1], colorPrimario[2]);
+    doc.text("Humanos", margin + 150, y + 18);
+
+    y += 28;
+    const subTitle = "REPORTE DE INCIDENTE - SAME Buenos Aires - Argentina";
+    doc.setFontSize(9);
+    const subW = doc.getTextWidth(subTitle) + 20;
+    doc.setFillColor(colorPrimario[0], colorPrimario[1], colorPrimario[2]);
+    doc.roundedRect(margin + 55, y, subW, 16, 4, 4, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.text(subTitle, margin + 65, y + 11);
+
+    y += 50;
+    doc.setFontSize(10);
+    doc.setTextColor(150);
+    doc.text("DATOS GENERALES", margin, y);
+    y += 10;
+    doc.setFillColor(colorFondoCaja[0], colorFondoCaja[1], colorFondoCaja[2]);
+    doc.roundedRect(margin, y, pageWidth - (margin * 2), 45, 12, 12, "F");
+
+    const colW = (pageWidth - (margin * 2)) / 4;
+    const labels = ["ÁMBITO", "FUNCIÓN", "AÑOS", "REFERENTE"];
+    const vals = [state.ambito || "---", document.getElementById('funcion').value || "---", document.getElementById('anios').value || "---", document.getElementById('referente').value || "---"];
+
+    labels.forEach((label, i) => {
+      doc.setFontSize(7); doc.setTextColor(150);
+      doc.text(label, margin + (colW * i) + 15, y + 18);
+      doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(0);
+      doc.text(String(vals[i]).toUpperCase(), margin + (colW * i) + 15, y + 32);
+    });
+
+    y += 70;
+    doc.setFontSize(10); doc.setTextColor(150); doc.text("IDENTIFICACIÓN Y CRÓNICA", margin, y);
+    y += 10;
+    doc.setFont("helvetica", "normal"); doc.setTextColor(0); doc.setFontSize(9);
+    const cronicaLines = doc.splitTextToSize(document.getElementById('cronica').value, pageWidth - (margin * 2));
+    doc.text(cronicaLines, margin, y);
+
+    const sigX = pageWidth - margin - 180;
+    const sigY = pageHeight - margin - 100;
+    doc.setDrawColor(colorPrimario[0], colorPrimario[1], colorPrimario[2]);
+    doc.roundedRect(sigX, sigY, 180, 80, 10, 10, "S");
+    doc.addImage(canvas.toDataURL("image/png"), "PNG", sigX + 10, sigY + 5, 160, 60);
+    doc.text("FIRMA", sigX + 90, sigY + 75, { align: "center" });
+
+    return doc;
+  }
+
+  document.getElementById('btn-preview').onclick = async () => {
+    const doc = await createPDF();
+    window.open(doc.output('bloburl'), '_blank');
+  };
+
+  document.getElementById('btn-download').onclick = async () => {
+    const doc = await createPDF();
+    doc.save("Reporte_SAME_FH.pdf");
+    if(confirm("¿Desea limpiar el formulario para un nuevo paciente?")) resetearFormulario();
+  };
 </script>
 </body>
 </html>
