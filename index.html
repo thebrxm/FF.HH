@@ -125,15 +125,31 @@
 </head>
 <body>
 
-<div class="container">
   <header>
-    <img src="https://i.imgur.com/EsZiIHa.jpeg" class="logo-placeholder" alt="Logo SAME">
+   <img src="https://i.imgur.com/EsZiIHa.jpeg" class="logo-placeholder" alt="Logo SAME">
     <div class="title-container">
       <h1>Factores <span>Humanos</span></h1>
       <div class="sub-title">REPORTE DE INCIDENTE - SAME BUENOS AIRES - ARGENTINA</div>
     </div>
     <div style="width:60px"></div>
-  </header>
+ </header>
+
+<section class="card" style="margin-bottom: 15px; padding: 12px 20px; border-left: 5px solid #6c5ce7;">
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <div style="white-space: nowrap; font-weight: 800; font-size: 11px; color: #6c5ce7;">
+            <span style="font-size: 16px;">📁</span>
+        </div>
+        <div style="flex-grow: 1; position: relative;">
+            <input type="text" id="buscador-paciente" placeholder="Buscar por Nombre o DNI..." list="lista-pacientes" 
+                   style="padding: 6px 12px; font-size: 13px; border-radius: 8px;">
+            <datalist id="lista-pacientes"></datalist>
+        </div>
+        <div style="display: flex; gap: 5px;">
+            <button type="button" id="btn-cargar" class="btn-opt verde" style="padding: 6px 12px; margin:0;">CARGAR</button>
+            <button type="button" id="btn-guardar-bd" class="btn-opt" style="padding: 6px 12px; margin:0; border-color: #6c5ce7; color: #6c5ce7;">GUARDAR</button>
+        </div>
+    </div>
+</section>
 
   <!-- FILA 1: DATOS + IDENTIFICACIÓN -->
   <div class="row">
@@ -683,6 +699,86 @@ document.getElementById('btn-preview').onclick = async () => {
     const doc = await createPDF();
     doc.save("Reporte_SAME_FH.pdf");
   };
+  
+  // --- LÓGICA DE BANCO DE DATOS ---
+
+// Guardar paciente actual en LocalStorage
+document.getElementById('btn-guardar-bd').onclick = () => {
+    const dni = document.getElementById('dni').value;
+    if (!dni) return alert("Por favor, ingrese un DNI para identificar al paciente.");
+
+    const paciente = {
+        nombre: document.getElementById('nombreApellido').value,
+        dni: dni,
+        edad: document.getElementById('edad').value,
+        sexo: state.sexo,
+        ambito: state.ambito,
+        funcion: document.getElementById('funcion').value,
+        anios: document.getElementById('anios').value,
+        referente: document.getElementById('referente').value
+    };
+
+    let bd = JSON.parse(localStorage.getItem('same_pacientes') || '{}');
+    bd[dni] = paciente;
+    localStorage.setItem('same_pacientes', JSON.stringify(bd));
+    
+    actualizarDatalist();
+    alert("Paciente guardado con éxito en el banco de datos local.");
+};
+
+// Cargar datos de un paciente seleccionado
+document.getElementById('btn-cargar').onclick = () => {
+    const busqueda = document.getElementById('buscador-paciente').value;
+    const bd = JSON.parse(localStorage.getItem('same_pacientes') || '{}');
+    
+    // Buscar por DNI exacto o encontrar el DNI si el usuario seleccionó del datalist
+    const dni = busqueda.includes(" | DNI: ") ? busqueda.split(" | DNI: ")[1] : busqueda;
+    const p = bd[dni];
+
+    if (p) {
+        document.getElementById('nombreApellido').value = p.nombre;
+        document.getElementById('dni').value = p.dni;
+        document.getElementById('edad').value = p.edad;
+        document.getElementById('funcion').value = p.funcion;
+        document.getElementById('anios').value = p.anios;
+        document.getElementById('referente').value = p.referente;
+        
+        // Cargar estados de botones
+        state.sexo = p.sexo;
+        state.ambito = p.ambito;
+        
+        // Visualmente actualizar botones
+        actualizarBotonesSeleccionados('sexo-group', p.sexo);
+        actualizarBotonesSeleccionados('ambito-group', p.ambito);
+        
+        generarCronica();
+        alert("Datos cargados.");
+    } else {
+        alert("Paciente no encontrado.");
+    }
+};
+
+function actualizarDatalist() {
+    const datalist = document.getElementById('lista-pacientes');
+    const bd = JSON.parse(localStorage.getItem('same_pacientes') || '{}');
+    datalist.innerHTML = '';
+    Object.values(bd).forEach(p => {
+        const option = document.createElement('option');
+        option.value = `${p.nombre} | DNI: ${p.dni}`;
+        datalist.appendChild(option);
+    });
+}
+
+function actualizarBotonesSeleccionados(groupId, value) {
+    const container = document.getElementById(groupId);
+    container.querySelectorAll('button').forEach(b => {
+        b.classList.remove('selected');
+        if(b.dataset.value === value) b.classList.add('selected');
+    });
+}
+
+// Llamar al cargar la página
+actualizarDatalist();
 </script>
 </body>
 </html>
