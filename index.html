@@ -137,19 +137,23 @@
 <section class="card" style="margin-bottom: 15px; padding: 12px 20px; border-left: 5px solid #6c5ce7;">
     <div style="display: flex; align-items: center; gap: 15px;">
         <div style="white-space: nowrap; font-weight: 800; font-size: 11px; color: #6c5ce7;">
-            <span style="font-size: 16px;">📁</span>
+            <span style="font-size: 16px;">📁</span> BUSCAR
         </div>
         <div style="flex-grow: 1; position: relative;">
-            <input type="text" id="buscador-paciente" placeholder="Buscar por Nombre o DNI..." list="lista-pacientes" 
+            <input type="text" id="buscador-paciente" placeholder="Nombre o DNI del paciente..." list="lista-pacientes" 
                    style="padding: 6px 12px; font-size: 13px; border-radius: 8px;">
             <datalist id="lista-pacientes"></datalist>
         </div>
-        <div style="display: flex; gap: 5px;">
-            <button type="button" id="btn-cargar" class="btn-opt verde" style="padding: 6px 12px; margin:0;">CARGAR</button>
-            <button type="button" id="btn-guardar-bd" class="btn-opt" style="padding: 6px 12px; margin:0; border-color: #6c5ce7; color: #6c5ce7;">GUARDAR</button>
-        </div>
+        <button type="button" id="btn-cargar" class="btn-opt verde" style="padding: 6px 20px; margin:0;">CARGAR</button>
     </div>
 </section>
+
+<div class="actions">
+    <button class="btn-action" id="btn-guardar-bd" style="background: #6c5ce7;">GUARDAR PACIENTE</button>
+    <button class="btn-action btn-copy" id="btn-copy">COPIAR TEXTO</button>
+    <button class="btn-action btn-preview" id="btn-preview">VISTA PREVIA PDF</button>
+    <button class="btn-action btn-generate" id="btn-download">GENERAR PDF</button>
+</div>
 
   <!-- FILA 1: DATOS + IDENTIFICACIÓN -->
   <div class="row">
@@ -779,6 +783,39 @@ function actualizarBotonesSeleccionados(groupId, value) {
 
 // Llamar al cargar la página
 actualizarDatalist();
+
+function resetearFormulario() {
+    // 1. Limpiar inputs y textareas
+    document.querySelectorAll('input:not([type="button"]), textarea, select').forEach(el => el.value = '');
+    
+    // 2. Resetear el estado interno (Triage y Manifestaciones)
+    state.triage.clear();
+    state.manifestaciones.rojo.clear();
+    state.manifestaciones.amarillo.clear();
+    state.manifestaciones.verde.clear();
+    state.sexo = '';
+    state.ambito = '';
+
+    // 3. Quitar clases 'selected' de todos los botones
+    document.querySelectorAll('.btn-opt').forEach(btn => btn.classList.remove('selected'));
+
+    // 4. Limpiar firma
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 5. Ocultar campos condicionales
+    document.getElementById('categoria_otros').style.display = 'none';
+    document.getElementById('deriva_otro').style.display = 'none';
+    document.getElementById('ulteriores-box').style.display = 'none';
+    document.getElementById('manifestaciones-container').innerHTML = '';
+
+    // 6. Actualizar la crónica (quedará vacía o con placeholders)
+    generarCronica();
+    
+    // 7. Limpiar buscador
+    document.getElementById('buscador-paciente').value = '';
+    
+    console.log("Formulario reseteado.");
+}
 </script>
 </body>
 </html>
