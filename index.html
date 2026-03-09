@@ -431,7 +431,7 @@
     texto += `FUNCIÓN: ${val('funcion') || '---'} | AÑOS: ${val('anios') || '---'}\n`;
     texto += `REFERENTE: ${val('referente') || '---'}\n\n`;
  
-   let acompaArr = [];
+    let acompaArr = [];
     document.querySelectorAll('[name="acompa"]:checked').forEach(c => acompaArr.push(c.value));
     texto += `Categoria: ${val('categoria')} ${val('categoria')==='Otros'?'('+val('categoria_otros')+')':''} | Acompañamiento: ${acompaArr.join(', ') || 'Solo'}\n`;
     texto += `AGRESORID: ${document.querySelector('[name="agresor"]:checked')?.value || 'No'}\n\n`;
@@ -495,26 +495,50 @@
     document.getElementById('clear-sig').onclick = () => ctx.clearRect(0,0,canvas.width,canvas.height);
   }
 
-  // --- LOGICA BOTONES ACCION ---
-
-  document.getElementById('btn-copy').onclick = () => {
-    navigator.clipboard.writeText(document.getElementById('cronica').value);
-    alert('Texto copiado!');
-  };
+  // --- LOGICA BANCO DE DATOS (RE-HIDRATACIÓN COMPLETA) ---
 
   document.getElementById('btn-guardar-bd').onclick = () => {
     const dni = document.getElementById('dni').value;
     if (!dni) return alert("Por favor, ingrese un DNI para identificar al paciente.");
 
+    // Recolectar estados de todos los checkboxes y radios
+    const getCheckedValues = (selector) => Array.from(document.querySelectorAll(selector))
+        .filter(el => el.checked).map(el => el.id);
+
     const paciente = {
-        nombre: document.getElementById('nombreApellido').value,
-        dni: dni,
-        edad: document.getElementById('edad').value,
-        sexo: state.sexo,
-        ambito: state.ambito,
-        funcion: document.getElementById('funcion').value,
-        anios: document.getElementById('anios').value,
-        referente: document.getElementById('referente').value
+        // Datos Directos
+        inputs: {
+            nombreApellido: document.getElementById('nombreApellido').value,
+            dni: dni,
+            edad: document.getElementById('edad').value,
+            funcion: document.getElementById('funcion').value,
+            anios: document.getElementById('anios').value,
+            referente: document.getElementById('referente').value,
+            fecha: document.getElementById('fecha').value,
+            hora: document.getElementById('hora').value,
+            categoria: document.getElementById('categoria').value,
+            categoria_otros: document.getElementById('categoria_otros').value,
+            direccion: document.getElementById('direccion').value,
+            cronica: document.getElementById('cronica').value,
+            duracion: document.getElementById('duracion').value,
+            deriva_comentario: document.getElementById('deriva_comentario').value,
+            deriva_otro: document.getElementById('deriva_otro').value,
+            observaciones: document.getElementById('observaciones').value,
+            ult_otro_val: "" // Placeholder si existiera
+        },
+        // Estados de botones (state)
+        state: {
+            ambito: state.ambito,
+            sexo: state.sexo,
+            triage: Array.from(state.triage),
+            manifestaciones: {
+                rojo: Array.from(state.manifestaciones.rojo),
+                amarillo: Array.from(state.manifestaciones.amarillo),
+                verde: Array.from(state.manifestaciones.verde)
+            }
+        },
+        // Checkboxes y Radios
+        checks: getCheckedValues('input[type="checkbox"], input[type="radio"]')
     };
 
     let bd = JSON.parse(localStorage.getItem('same_pacientes') || '{}');
@@ -522,7 +546,7 @@
     localStorage.setItem('same_pacientes', JSON.stringify(bd));
     
     actualizarDatalist();
-    alert("Paciente guardado exitosamente en el banco de datos.");
+    alert("Memoria completa del paciente guardada.");
     resetearFormulario();
   };
 
@@ -533,21 +557,45 @@
     const p = bd[dni];
 
     if (p) {
-        document.getElementById('nombreApellido').value = p.nombre;
-        document.getElementById('dni').value = p.dni;
-        document.getElementById('edad').value = p.edad;
-        document.getElementById('funcion').value = p.funcion;
-        document.getElementById('anios').value = p.anios;
-        document.getElementById('referente').value = p.referente;
+        resetearFormulario(); // Limpiar antes de cargar
+
+        // 1. Cargar Inputs
+        for (let id in p.inputs) {
+            const el = document.getElementById(id);
+            if (el) el.value = p.inputs[id];
+        }
+
+        // 2. Restaurar State
+        state.ambito = p.state.ambito;
+        state.sexo = p.state.sexo;
+        state.triage = new Set(p.state.triage);
+        state.manifestaciones.rojo = new Set(p.state.manifestaciones.rojo);
+        state.manifestaciones.amarillo = new Set(p.state.manifestaciones.amarillo);
+        state.manifestaciones.verde = new Set(p.state.manifestaciones.verde);
+
+        // 3. Marcar Botones de Grupo
+        actualizarBotonesSeleccionados('ambito-group', state.ambito);
+        actualizarBotonesSeleccionados('sexo-group', state.sexo);
         
-        state.sexo = p.sexo;
-        state.ambito = p.ambito;
-        
-        actualizarBotonesSeleccionados('sexo-group', p.sexo);
-        actualizarBotonesSeleccionados('ambito-group', p.ambito);
-        
+        // 4. Marcar Botones de Triage y Renderizar Manifestaciones
+        document.querySelectorAll('[data-triage]').forEach(btn => {
+            if(state.triage.has(btn.dataset.triage)) btn.classList.add('selected');
+        });
+        renderManifestaciones();
+
+        // 5. Marcar Checkboxes y Radios
+        p.checks.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.checked = true;
+        });
+
+        // 6. Disparar lógicas de visibilidad
+        document.getElementById('categoria').dispatchEvent(new Event('change'));
+        if(document.getElementById('d4').checked) document.getElementById('deriva_otro').style.display = 'block';
+        if(document.getElementById('seg_ulteriores').checked) document.getElementById('ulteriores-box').style.display = 'block';
+
         generarCronica();
-        alert("Datos del paciente cargados.");
+        alert("Paciente y evolución cargados correctamente.");
     } else {
         alert("Paciente no encontrado.");
     }
@@ -559,7 +607,8 @@
     datalist.innerHTML = '';
     Object.values(bd).forEach(p => {
         const option = document.createElement('option');
-        option.value = `${p.nombre} | DNI: ${p.dni}`;
+        // Usamos el nombre del input guardado
+        option.value = `${p.inputs.nombreApellido} | DNI: ${p.inputs.dni}`;
         datalist.appendChild(option);
     });
   }
@@ -573,7 +622,10 @@
   }
 
   function resetearFormulario() {
-    document.querySelectorAll('input:not([type="button"]), textarea, select').forEach(el => el.value = '');
+    document.querySelectorAll('input:not([type="button"]), textarea, select').forEach(el => {
+        if(el.type === 'checkbox' || el.type === 'radio') el.checked = false;
+        else el.value = '';
+    });
     state.triage.clear();
     state.manifestaciones.rojo.clear();
     state.manifestaciones.amarillo.clear();
@@ -590,8 +642,7 @@
     generarCronica();
   }
 
-  // --- PDF LOGIC ---
-
+  // --- PDF LOGIC (ESTÁNDAR) ---
   async function createPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: "pt", format: "a4" });
@@ -599,10 +650,8 @@
     const pageHeight = doc.internal.pageSize.height;
     const margin = 40;
     let y = 40;
-
     const colorPrimario = [23, 85, 244]; 
     const colorFondoCaja = [238, 244, 255]; 
-    const colorTextoGris = [120, 130, 140];
 
     async function loadImage(url) {
       return new Promise((resolve) => {
@@ -621,7 +670,6 @@
     }
 
     const logoBase64 = await loadImage("https://i.imgur.com/EsZiIHa.jpeg");
-
     doc.addImage(logoBase64, "PNG", margin, y - 5, 45, 45);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(22);
@@ -633,16 +681,13 @@
     y += 28;
     const subTitle = "REPORTE DE INCIDENTE - SAME Buenos Aires - Argentina";
     doc.setFontSize(9);
-    const subW = doc.getTextWidth(subTitle) + 20;
     doc.setFillColor(colorPrimario[0], colorPrimario[1], colorPrimario[2]);
-    doc.roundedRect(margin + 55, y, subW, 16, 4, 4, "F");
+    doc.roundedRect(margin + 55, y, doc.getTextWidth(subTitle) + 20, 16, 4, 4, "F");
     doc.setTextColor(255, 255, 255);
     doc.text(subTitle, margin + 65, y + 11);
 
     y += 50;
-    doc.setFontSize(10);
-    doc.setTextColor(150);
-    doc.text("DATOS GENERALES", margin, y);
+    doc.setFontSize(10); doc.setTextColor(150); doc.text("DATOS GENERALES", margin, y);
     y += 10;
     doc.setFillColor(colorFondoCaja[0], colorFondoCaja[1], colorFondoCaja[2]);
     doc.roundedRect(margin, y, pageWidth - (margin * 2), 45, 12, 12, "F");
@@ -659,8 +704,8 @@
     });
 
     y += 70;
-    doc.setFontSize(10); doc.setTextColor(150); doc.text("IDENTIFICACIÓN Y CRÓNICA", margin, y);
-    y += 10;
+    doc.setFontSize(10); doc.setTextColor(150); doc.text("CRÓNICA Y EVOLUCIÓN", margin, y);
+    y += 15;
     doc.setFont("helvetica", "normal"); doc.setTextColor(0); doc.setFontSize(9);
     const cronicaLines = doc.splitTextToSize(document.getElementById('cronica').value, pageWidth - (margin * 2));
     doc.text(cronicaLines, margin, y);
@@ -682,7 +727,7 @@
 
   document.getElementById('btn-download').onclick = async () => {
     const doc = await createPDF();
-    doc.save("Reporte_SAME_FH.pdf");
+    doc.save(`Reporte_${document.getElementById('dni').value || 'SinDNI'}.pdf`);
     if(confirm("¿Desea limpiar el formulario para un nuevo paciente?")) resetearFormulario();
   };
 </script>
