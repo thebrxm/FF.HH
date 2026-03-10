@@ -11,6 +11,10 @@
   
 <meta name="viewport" content="width=device-width, initial-scale=0.80, maximum-scale=0.80, user-scalable=no">
 <title>Factores Humanos - Reporte de Incidente</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+
 <style>
   :root {
     --primary: #1755f4;
@@ -321,6 +325,20 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
+  // --- INICIALIZAR FIREBASE (PASO 1) ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyC5kRSbBCHfS2iwvY8lOcI5ULiD47EeoMI",
+    authDomain: "same-factoreshumanos.firebaseapp.com",
+    projectId: "same-factoreshumanos",
+    storageBucket: "same-factoreshumanos.firebasestorage.app",
+    messagingSenderId: "655252504139",
+    appId: "1:655252504139:web:f7aa5f29b9bffd9e3b57ce",
+    measurementId: "G-FR7NQ3603E"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
   const state = {
     triage: new Set(),
     manifestaciones: { rojo: new Set(), amarillo: new Set(), verde: new Set() },
@@ -339,9 +357,135 @@
     initTriage();
     initSignature();
     initLogic();
-    actualizarDatalist();
+    actualizarDatalist(); // Carga datos desde Firebase al iniciar
     generarCronica();
   });
+
+  // --- LÓGICA DE FIREBASE (GUARDAR Y CARGAR) ---
+
+  document.getElementById('btn-guardar-bd').onclick = async () => {
+    const dni = document.getElementById('dni').value;
+    if (!dni) return alert("Por favor, ingrese un DNI para identificar al paciente.");
+
+    const getCheckedValues = (selector) => Array.from(document.querySelectorAll(selector))
+        .filter(el => el.checked).map(el => el.id);
+
+    const paciente = {
+        inputs: {
+            nombreApellido: document.getElementById('nombreApellido').value,
+            dni: dni,
+            edad: document.getElementById('edad').value,
+            funcion: document.getElementById('funcion').value,
+            anios: document.getElementById('anios').value,
+            referente: document.getElementById('referente').value,
+            fecha: document.getElementById('fecha').value,
+            hora: document.getElementById('hora').value,
+            categoria: document.getElementById('categoria').value,
+            categoria_otros: document.getElementById('categoria_otros').value,
+            direccion: document.getElementById('direccion').value,
+            cronica: document.getElementById('cronica').value,
+            duracion: document.getElementById('duracion').value,
+            deriva_comentario: document.getElementById('deriva_comentario').value,
+            deriva_otro: document.getElementById('deriva_otro').value,
+            observaciones: document.getElementById('observaciones').value
+        },
+        state: {
+            ambito: state.ambito,
+            sexo: state.sexo,
+            triage: Array.from(state.triage),
+            manifestaciones: {
+                rojo: Array.from(state.manifestaciones.rojo),
+                amarillo: Array.from(state.manifestaciones.amarillo),
+                verde: Array.from(state.manifestaciones.verde)
+            }
+        },
+        checks: getCheckedValues('input[type="checkbox"], input[type="radio"]'),
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    try {
+        await db.collection("pacientes").doc(dni).set(paciente);
+        alert("Paciente sincronizado en la nube exitosamente.");
+        actualizarDatalist(); 
+        resetearFormulario();
+    } catch (e) {
+        console.error("Error al guardar:", e);
+        alert("Error de conexión con la nube.");
+    }
+  };
+
+  document.getElementById('btn-cargar').onclick = async () => {
+    const busqueda = document.getElementById('buscador-paciente').value;
+    const dni = busqueda.includes(" | DNI: ") ? busqueda.split(" | DNI: ")[1] : busqueda;
+
+    if (!dni) return alert("Ingrese un DNI o seleccione uno de la lista.");
+
+    try {
+        const doc = await db.collection("pacientes").doc(dni).get();
+        if (doc.exists) {
+            const p = doc.data();
+            resetearFormulario();
+
+            // Rellenar Inputs
+            for (let id in p.inputs) {
+                const el = document.getElementById(id);
+                if (el) el.value = p.inputs[id];
+            }
+
+            // Restaurar State
+            state.ambito = p.state.ambito;
+            state.sexo = p.state.sexo;
+            state.triage = new Set(p.state.triage);
+            state.manifestaciones.rojo = new Set(p.state.manifestaciones.rojo);
+            state.manifestaciones.amarillo = new Set(p.state.manifestaciones.amarillo);
+            state.manifestaciones.verde = new Set(p.state.manifestaciones.verde);
+
+            actualizarBotonesSeleccionados('ambito-group', state.ambito);
+            actualizarBotonesSeleccionados('sexo-group', state.sexo);
+            
+            document.querySelectorAll('[data-triage]').forEach(btn => {
+                if(state.triage.has(btn.dataset.triage)) btn.classList.add('selected');
+            });
+            renderManifestaciones();
+
+            // Marcar Checks
+            p.checks.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.checked = true;
+            });
+
+            // Visibilidad
+            document.getElementById('categoria').dispatchEvent(new Event('change'));
+            if(document.getElementById('d4').checked) document.getElementById('deriva_otro').style.display = 'block';
+            if(document.getElementById('seg_ulteriores').checked) document.getElementById('ulteriores-box').style.display = 'block';
+
+            generarCronica();
+            alert("Historial del paciente recuperado de la nube.");
+        } else {
+            alert("El paciente no existe en el banco de datos central.");
+        }
+    } catch (e) {
+        alert("Error al acceder a la nube.");
+    }
+  };
+
+  async function actualizarDatalist() {
+    const datalist = document.getElementById('lista-pacientes');
+    datalist.innerHTML = '';
+    try {
+        const querySnapshot = await db.collection("pacientes").get();
+        querySnapshot.forEach((doc) => {
+            const p = doc.data();
+            const option = document.createElement('option');
+            option.value = `${p.inputs.nombreApellido} | DNI: ${doc.id}`;
+            datalist.appendChild(option);
+        });
+    } catch (e) {
+        console.log("Error al cargar datalist:", e);
+    }
+  }
+
+  // --- FUNCIONES ORIGINALES ---
 
   function initButtons() {
     ['ambito-group', 'sexo-group'].forEach(id => {
@@ -473,8 +617,6 @@
     document.getElementById('cronica').value = texto;
   }
 
-  // FIRMA
-  let canvas, ctx, drawing = false;
   function initSignature() {
     canvas = document.getElementById('signature');
     ctx = canvas.getContext('2d');
@@ -495,126 +637,9 @@
     document.getElementById('clear-sig').onclick = () => ctx.clearRect(0,0,canvas.width,canvas.height);
   }
 
-  // --- LOGICA BANCO DE DATOS (RE-HIDRATACIÓN COMPLETA) ---
-
-  document.getElementById('btn-guardar-bd').onclick = () => {
-    const dni = document.getElementById('dni').value;
-    if (!dni) return alert("Por favor, ingrese un DNI para identificar al paciente.");
-
-    // Recolectar estados de todos los checkboxes y radios
-    const getCheckedValues = (selector) => Array.from(document.querySelectorAll(selector))
-        .filter(el => el.checked).map(el => el.id);
-
-    const paciente = {
-        // Datos Directos
-        inputs: {
-            nombreApellido: document.getElementById('nombreApellido').value,
-            dni: dni,
-            edad: document.getElementById('edad').value,
-            funcion: document.getElementById('funcion').value,
-            anios: document.getElementById('anios').value,
-            referente: document.getElementById('referente').value,
-            fecha: document.getElementById('fecha').value,
-            hora: document.getElementById('hora').value,
-            categoria: document.getElementById('categoria').value,
-            categoria_otros: document.getElementById('categoria_otros').value,
-            direccion: document.getElementById('direccion').value,
-            cronica: document.getElementById('cronica').value,
-            duracion: document.getElementById('duracion').value,
-            deriva_comentario: document.getElementById('deriva_comentario').value,
-            deriva_otro: document.getElementById('deriva_otro').value,
-            observaciones: document.getElementById('observaciones').value,
-            ult_otro_val: "" // Placeholder si existiera
-        },
-        // Estados de botones (state)
-        state: {
-            ambito: state.ambito,
-            sexo: state.sexo,
-            triage: Array.from(state.triage),
-            manifestaciones: {
-                rojo: Array.from(state.manifestaciones.rojo),
-                amarillo: Array.from(state.manifestaciones.amarillo),
-                verde: Array.from(state.manifestaciones.verde)
-            }
-        },
-        // Checkboxes y Radios
-        checks: getCheckedValues('input[type="checkbox"], input[type="radio"]')
-    };
-
-    let bd = JSON.parse(localStorage.getItem('same_pacientes') || '{}');
-    bd[dni] = paciente;
-    localStorage.setItem('same_pacientes', JSON.stringify(bd));
-    
-    actualizarDatalist();
-    alert("Memoria completa del paciente guardada.");
-    resetearFormulario();
-  };
-
-  document.getElementById('btn-cargar').onclick = () => {
-    const busqueda = document.getElementById('buscador-paciente').value;
-    const bd = JSON.parse(localStorage.getItem('same_pacientes') || '{}');
-    const dni = busqueda.includes(" | DNI: ") ? busqueda.split(" | DNI: ")[1] : busqueda;
-    const p = bd[dni];
-
-    if (p) {
-        resetearFormulario(); // Limpiar antes de cargar
-
-        // 1. Cargar Inputs
-        for (let id in p.inputs) {
-            const el = document.getElementById(id);
-            if (el) el.value = p.inputs[id];
-        }
-
-        // 2. Restaurar State
-        state.ambito = p.state.ambito;
-        state.sexo = p.state.sexo;
-        state.triage = new Set(p.state.triage);
-        state.manifestaciones.rojo = new Set(p.state.manifestaciones.rojo);
-        state.manifestaciones.amarillo = new Set(p.state.manifestaciones.amarillo);
-        state.manifestaciones.verde = new Set(p.state.manifestaciones.verde);
-
-        // 3. Marcar Botones de Grupo
-        actualizarBotonesSeleccionados('ambito-group', state.ambito);
-        actualizarBotonesSeleccionados('sexo-group', state.sexo);
-        
-        // 4. Marcar Botones de Triage y Renderizar Manifestaciones
-        document.querySelectorAll('[data-triage]').forEach(btn => {
-            if(state.triage.has(btn.dataset.triage)) btn.classList.add('selected');
-        });
-        renderManifestaciones();
-
-        // 5. Marcar Checkboxes y Radios
-        p.checks.forEach(id => {
-            const el = document.getElementById(id);
-            if(el) el.checked = true;
-        });
-
-        // 6. Disparar lógicas de visibilidad
-        document.getElementById('categoria').dispatchEvent(new Event('change'));
-        if(document.getElementById('d4').checked) document.getElementById('deriva_otro').style.display = 'block';
-        if(document.getElementById('seg_ulteriores').checked) document.getElementById('ulteriores-box').style.display = 'block';
-
-        generarCronica();
-        alert("Paciente y evolución cargados correctamente.");
-    } else {
-        alert("Paciente no encontrado.");
-    }
-  };
-
-  function actualizarDatalist() {
-    const datalist = document.getElementById('lista-pacientes');
-    const bd = JSON.parse(localStorage.getItem('same_pacientes') || '{}');
-    datalist.innerHTML = '';
-    Object.values(bd).forEach(p => {
-        const option = document.createElement('option');
-        // Usamos el nombre del input guardado
-        option.value = `${p.inputs.nombreApellido} | DNI: ${p.inputs.dni}`;
-        datalist.appendChild(option);
-    });
-  }
-
   function actualizarBotonesSeleccionados(groupId, value) {
     const container = document.getElementById(groupId);
+    if(!container) return;
     container.querySelectorAll('button').forEach(b => {
         b.classList.remove('selected');
         if(b.dataset.value === value) b.classList.add('selected');
@@ -642,7 +667,8 @@
     generarCronica();
   }
 
-  // --- PDF LOGIC (ESTÁNDAR) ---
+  // --- PDF LOGIC ---
+
   async function createPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: "pt", format: "a4" });
@@ -719,6 +745,11 @@
 
     return doc;
   }
+
+  document.getElementById('btn-copy').onclick = () => {
+    navigator.clipboard.writeText(document.getElementById('cronica').value);
+    alert('Texto copiado!');
+  };
 
   document.getElementById('btn-preview').onclick = async () => {
     const doc = await createPDF();
