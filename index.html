@@ -325,7 +325,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-  // --- INICIALIZAR FIREBASE (PASO 1) ---
+
   const firebaseConfig = {
     apiKey: "AIzaSyC5kRSbBCHfS2iwvY8lOcI5ULiD47EeoMI",
     authDomain: "same-factoreshumanos.firebaseapp.com",
@@ -357,11 +357,9 @@
     initTriage();
     initSignature();
     initLogic();
-    actualizarDatalist(); // Carga datos desde Firebase al iniciar
+    actualizarDatalist(); 
     generarCronica();
   });
-
-  // --- LÓGICA DE FIREBASE (GUARDAR Y CARGAR) ---
 
   document.getElementById('btn-guardar-bd').onclick = async () => {
     const dni = document.getElementById('dni').value;
@@ -448,13 +446,11 @@
             });
             renderManifestaciones();
 
-            // Marcar Checks
             p.checks.forEach(id => {
                 const el = document.getElementById(id);
                 if(el) el.checked = true;
             });
 
-            // Visibilidad
             document.getElementById('categoria').dispatchEvent(new Event('change'));
             if(document.getElementById('d4').checked) document.getElementById('deriva_otro').style.display = 'block';
             if(document.getElementById('seg_ulteriores').checked) document.getElementById('ulteriores-box').style.display = 'block';
@@ -484,8 +480,6 @@
         console.log("Error al cargar datalist:", e);
     }
   }
-
-  // --- FUNCIONES ORIGINALES ---
 
   function initButtons() {
     ['ambito-group', 'sexo-group'].forEach(id => {
@@ -666,8 +660,6 @@
     document.getElementById('buscador-paciente').value = '';
     generarCronica();
   }
-
-  // --- PDF LOGIC ---
 
   async function createPDF() {
     const { jsPDF } = window.jspdf;
