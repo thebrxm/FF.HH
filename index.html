@@ -8,12 +8,12 @@
 <meta name="apple-mobile-web-app-title" content="Factores Humanos">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="theme-color" content="#1755f4">
-  
 <meta name="viewport" content="width=device-width, initial-scale=0.80, maximum-scale=0.80, user-scalable=no">
-<title>Factores Humanos - Reporte de Incidente</title>
+<title>Factores Humanos - Reporte SAME</title>
 
 <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
   :root {
@@ -31,98 +31,38 @@
   }
 
   * { box-sizing: border-box; }
-  body {
-    background-color: var(--bg-body);
-    font-family: 'Segoe UI', sans-serif;
-    color: var(--text-main);
-    margin: 0;
-    padding: 20px;
-  }
-
+  body { background-color: var(--bg-body); font-family: 'Segoe UI', sans-serif; color: var(--text-main); margin: 0; padding: 20px; }
   .container { max-width: 1200px; margin: 0 auto; }
-
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: white;
-    padding: 15px 30px;
-    border-radius: 16px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    margin-bottom: 25px;
-  }
+  header { display: flex; align-items: center; justify-content: space-between; background: white; padding: 15px 30px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; }
   .logo-placeholder { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; }
   .title-container { text-align: center; flex-grow: 1; }
   header h1 { font-size: 24px; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
   header h1 span { color: var(--primary); }
-  .sub-title {
-    font-size: 11px;
-    background: var(--primary);
-    color: white;
-    padding: 4px 12px;
-    font-weight: 700;
-    border-radius: 20px;
-    display: inline-block;
-    margin-top: 5px;
-  }
-
+  .sub-title { font-size: 11px; background: var(--primary); color: white; padding: 4px 12px; font-weight: 700; border-radius: 20px; display: inline-block; margin-top: 5px; }
   .row { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px; }
   .col { flex: 1; min-width: 350px; display: flex; flex-direction: column; }
-
-  .card {
-    background: white;
-    border-radius: 16px;
-    padding: 25px;
-    height: 100%;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-    border: 1px solid #e1e8f0;
-  }
-  
-  .section-header {
-    font-weight: 700;
-    font-size: 14px;
-    color: var(--primary);
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-transform: uppercase;
-  }
+  .card { background: white; border-radius: 16px; padding: 25px; height: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #e1e8f0; }
+  .section-header { font-weight: 700; font-size: 14px; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; text-transform: uppercase; }
   .section-header .icon { background: var(--primary); color: white; border-radius: 6px; padding: 4px 8px; }
-
   label.bold { font-weight: 700; font-size: 11px; color: var(--text-main); margin-bottom: 8px; display: block; text-transform: uppercase; }
-  
-  input, select, textarea {
-    width: 100%; padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 10px; font-size: 14px;
-  }
-
+  input, select, textarea { width: 100%; padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 10px; font-size: 14px; }
   .btn-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
-  .btn-opt {
-    background: white; border: 1px solid var(--border-color); padding: 10px 12px; border-radius: 10px;
-    cursor: pointer; font-size: 11px; font-weight: 700; transition: 0.2s;
-  }
+  .btn-opt { background: white; border: 1px solid var(--border-color); padding: 10px 12px; border-radius: 10px; cursor: pointer; font-size: 11px; font-weight: 700; transition: 0.2s; }
   .btn-opt.selected { background: var(--primary); color: white; border-color: var(--primary); }
   .btn-opt.rojo.selected { background: var(--rojo); border-color: var(--rojo); }
   .btn-opt.amarillo.selected { background: var(--amarillo); border-color: var(--amarillo); color: #000; }
   .btn-opt.verde.selected { background: var(--verde); border-color: var(--verde); }
-
   .check-box-group { display: flex; flex-wrap: wrap; gap: 8px; }
   .check-item { display: none; }
-  .check-label {
-    border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 8px;
-    cursor: pointer; font-size: 11px; font-weight: 600; background: white;
-  }
+  .check-label { border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 600; background: white; }
   .check-item:checked + .check-label { background: var(--primary); color: white; border-color: var(--primary); }
-
   .signature-box { border: 2px dashed var(--primary); border-radius: 12px; width: 100%; height: 160px; background: #fafafa; }
-
   .actions { display: flex; justify-content: flex-end; gap: 10px; margin: 30px 0; }
   .btn-action { padding: 12px 20px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; color: white; }
   .btn-copy { background: #6c757d; }
   .btn-preview { background: var(--verde); }
   .btn-generate { background: var(--primary); }
   .btn-save-bd { background: var(--purple); }
-
   @media (max-width: 850px) { .col { min-width: 100%; } .actions { flex-direction: column; } }
 </style>
 </head>
@@ -140,12 +80,9 @@
 
   <section class="card" style="margin-bottom: 20px; padding: 12px 20px; border-left: 5px solid var(--purple);">
     <div style="display: flex; align-items: center; gap: 15px;">
-        <div style="white-space: nowrap; font-weight: 800; font-size: 11px; color: var(--purple);">
-            <span style="font-size: 16px;">📁</span> BUSCAR
-        </div>
+        <div style="white-space: nowrap; font-weight: 800; font-size: 11px; color: var(--purple);">📁 BUSCAR</div>
         <div style="flex-grow: 1; position: relative;">
-            <input type="text" id="buscador-paciente" placeholder="Nombre o DNI del paciente..." list="lista-pacientes" 
-                   style="padding: 6px 12px; font-size: 13px; border-radius: 8px;">
+            <input type="text" id="buscador-paciente" placeholder="Nombre o DNI del paciente..." list="lista-pacientes" style="padding: 6px 12px; font-size: 13px; border-radius: 8px;">
             <datalist id="lista-pacientes"></datalist>
         </div>
         <button type="button" id="btn-cargar" class="btn-opt verde" style="padding: 8px 20px; margin:0;">CARGAR</button>
@@ -323,9 +260,8 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-
+  // --- INICIALIZAR FIREBASE ---
   const firebaseConfig = {
     apiKey: "AIzaSyC5kRSbBCHfS2iwvY8lOcI5ULiD47EeoMI",
     authDomain: "same-factoreshumanos.firebaseapp.com",
@@ -357,129 +293,9 @@
     initTriage();
     initSignature();
     initLogic();
-    actualizarDatalist(); 
+    actualizarDatalist();
     generarCronica();
   });
-
-  document.getElementById('btn-guardar-bd').onclick = async () => {
-    const dni = document.getElementById('dni').value;
-    if (!dni) return alert("Por favor, ingrese un DNI para identificar al paciente.");
-
-    const getCheckedValues = (selector) => Array.from(document.querySelectorAll(selector))
-        .filter(el => el.checked).map(el => el.id);
-
-    const paciente = {
-        inputs: {
-            nombreApellido: document.getElementById('nombreApellido').value,
-            dni: dni,
-            edad: document.getElementById('edad').value,
-            funcion: document.getElementById('funcion').value,
-            anios: document.getElementById('anios').value,
-            referente: document.getElementById('referente').value,
-            fecha: document.getElementById('fecha').value,
-            hora: document.getElementById('hora').value,
-            categoria: document.getElementById('categoria').value,
-            categoria_otros: document.getElementById('categoria_otros').value,
-            direccion: document.getElementById('direccion').value,
-            cronica: document.getElementById('cronica').value,
-            duracion: document.getElementById('duracion').value,
-            deriva_comentario: document.getElementById('deriva_comentario').value,
-            deriva_otro: document.getElementById('deriva_otro').value,
-            observaciones: document.getElementById('observaciones').value
-        },
-        state: {
-            ambito: state.ambito,
-            sexo: state.sexo,
-            triage: Array.from(state.triage),
-            manifestaciones: {
-                rojo: Array.from(state.manifestaciones.rojo),
-                amarillo: Array.from(state.manifestaciones.amarillo),
-                verde: Array.from(state.manifestaciones.verde)
-            }
-        },
-        checks: getCheckedValues('input[type="checkbox"], input[type="radio"]'),
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    };
-
-    try {
-        await db.collection("pacientes").doc(dni).set(paciente);
-        alert("Paciente sincronizado en la nube exitosamente.");
-        actualizarDatalist(); 
-        resetearFormulario();
-    } catch (e) {
-        console.error("Error al guardar:", e);
-        alert("Error de conexión con la nube.");
-    }
-  };
-
-  document.getElementById('btn-cargar').onclick = async () => {
-    const busqueda = document.getElementById('buscador-paciente').value;
-    const dni = busqueda.includes(" | DNI: ") ? busqueda.split(" | DNI: ")[1] : busqueda;
-
-    if (!dni) return alert("Ingrese un DNI o seleccione uno de la lista.");
-
-    try {
-        const doc = await db.collection("pacientes").doc(dni).get();
-        if (doc.exists) {
-            const p = doc.data();
-            resetearFormulario();
-
-            // Rellenar Inputs
-            for (let id in p.inputs) {
-                const el = document.getElementById(id);
-                if (el) el.value = p.inputs[id];
-            }
-
-            // Restaurar State
-            state.ambito = p.state.ambito;
-            state.sexo = p.state.sexo;
-            state.triage = new Set(p.state.triage);
-            state.manifestaciones.rojo = new Set(p.state.manifestaciones.rojo);
-            state.manifestaciones.amarillo = new Set(p.state.manifestaciones.amarillo);
-            state.manifestaciones.verde = new Set(p.state.manifestaciones.verde);
-
-            actualizarBotonesSeleccionados('ambito-group', state.ambito);
-            actualizarBotonesSeleccionados('sexo-group', state.sexo);
-            
-            document.querySelectorAll('[data-triage]').forEach(btn => {
-                if(state.triage.has(btn.dataset.triage)) btn.classList.add('selected');
-            });
-            renderManifestaciones();
-
-            p.checks.forEach(id => {
-                const el = document.getElementById(id);
-                if(el) el.checked = true;
-            });
-
-            document.getElementById('categoria').dispatchEvent(new Event('change'));
-            if(document.getElementById('d4').checked) document.getElementById('deriva_otro').style.display = 'block';
-            if(document.getElementById('seg_ulteriores').checked) document.getElementById('ulteriores-box').style.display = 'block';
-
-            generarCronica();
-            alert("Historial del paciente recuperado de la nube.");
-        } else {
-            alert("El paciente no existe en el banco de datos central.");
-        }
-    } catch (e) {
-        alert("Error al acceder a la nube.");
-    }
-  };
-
-  async function actualizarDatalist() {
-    const datalist = document.getElementById('lista-pacientes');
-    datalist.innerHTML = '';
-    try {
-        const querySnapshot = await db.collection("pacientes").get();
-        querySnapshot.forEach((doc) => {
-            const p = doc.data();
-            const option = document.createElement('option');
-            option.value = `${p.inputs.nombreApellido} | DNI: ${doc.id}`;
-            datalist.appendChild(option);
-        });
-    } catch (e) {
-        console.log("Error al cargar datalist:", e);
-    }
-  }
 
   function initButtons() {
     ['ambito-group', 'sexo-group'].forEach(id => {
@@ -611,6 +427,8 @@
     document.getElementById('cronica').value = texto;
   }
 
+  // FIRMA
+  let canvas, ctx, drawing = false;
   function initSignature() {
     canvas = document.getElementById('signature');
     ctx = canvas.getContext('2d');
@@ -629,6 +447,121 @@
     canvas.onmousedown = start; canvas.onmousemove = move; canvas.onmouseup = stop;
     canvas.ontouchstart = start; canvas.ontouchmove = move; canvas.ontouchend = stop;
     document.getElementById('clear-sig').onclick = () => ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+
+  // --- LOGICA DE FIREBASE Y BOTONES DE ACCIÓN ---
+
+  document.getElementById('btn-copy').onclick = () => {
+    navigator.clipboard.writeText(document.getElementById('cronica').value);
+    alert('Texto copiado!');
+  };
+
+  document.getElementById('btn-guardar-bd').onclick = async () => {
+    const dni = document.getElementById('dni').value;
+    if (!dni) return alert("Por favor, ingrese un DNI para identificar al paciente.");
+
+    const getCheckedValues = (selector) => Array.from(document.querySelectorAll(selector)).filter(el => el.checked).map(el => el.id);
+
+    const paciente = {
+        inputs: {
+            nombreApellido: document.getElementById('nombreApellido').value,
+            dni: dni, edad: document.getElementById('edad').value,
+            funcion: document.getElementById('funcion').value,
+            anios: document.getElementById('anios').value,
+            referente: document.getElementById('referente').value,
+            fecha: document.getElementById('fecha').value,
+            hora: document.getElementById('hora').value,
+            categoria: document.getElementById('categoria').value,
+            categoria_otros: document.getElementById('categoria_otros').value,
+            direccion: document.getElementById('direccion').value,
+            cronica: document.getElementById('cronica').value,
+            duracion: document.getElementById('duracion').value,
+            deriva_comentario: document.getElementById('deriva_comentario').value,
+            deriva_otro: document.getElementById('deriva_otro').value,
+            observaciones: document.getElementById('observaciones').value
+        },
+        state: {
+            ambito: state.ambito, sexo: state.sexo, triage: Array.from(state.triage),
+            manifestaciones: {
+                rojo: Array.from(state.manifestaciones.rojo),
+                amarillo: Array.from(state.manifestaciones.amarillo),
+                verde: Array.from(state.manifestaciones.verde)
+            }
+        },
+        checks: getCheckedValues('input[type="checkbox"], input[type="radio"]'),
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    try {
+        await db.collection("pacientes").doc(dni).set(paciente);
+        alert("Paciente sincronizado en la nube exitosamente.");
+        actualizarDatalist();
+        resetearFormulario();
+    } catch (e) {
+        console.error("Error al guardar:", e);
+        alert("Error de conexión con la nube.");
+    }
+  };
+
+  document.getElementById('btn-cargar').onclick = async () => {
+    const busqueda = document.getElementById('buscador-paciente').value;
+    const dni = busqueda.includes(" | DNI: ") ? busqueda.split(" | DNI: ")[1] : busqueda;
+
+    if (!dni) return alert("Ingrese un DNI o seleccione uno de la lista.");
+
+    try {
+        const doc = await db.collection("pacientes").doc(dni).get();
+        if (doc.exists) {
+            const p = doc.data();
+            resetearFormulario();
+
+            for (let id in p.inputs) {
+                const el = document.getElementById(id);
+                if (el) el.value = p.inputs[id];
+            }
+
+            state.ambito = p.state.ambito;
+            state.sexo = p.state.sexo;
+            state.triage = new Set(p.state.triage);
+            state.manifestaciones.rojo = new Set(p.state.manifestaciones.rojo);
+            state.manifestaciones.amarillo = new Set(p.state.manifestaciones.amarillo);
+            state.manifestaciones.verde = new Set(p.state.manifestaciones.verde);
+
+            actualizarBotonesSeleccionados('ambito-group', state.ambito);
+            actualizarBotonesSeleccionados('sexo-group', state.sexo);
+            
+            document.querySelectorAll('[data-triage]').forEach(btn => {
+                if(state.triage.has(btn.dataset.triage)) btn.classList.add('selected');
+            });
+            renderManifestaciones();
+
+            p.checks.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.checked = true;
+            });
+
+            document.getElementById('categoria').dispatchEvent(new Event('change'));
+            if(document.getElementById('d4').checked) document.getElementById('deriva_otro').style.display = 'block';
+            if(document.getElementById('seg_ulteriores').checked) document.getElementById('ulteriores-box').style.display = 'block';
+
+            generarCronica();
+            alert("Historial del paciente recuperado de la nube.");
+        } else { alert("El paciente no existe en el banco de datos central."); }
+    } catch (e) { alert("Error al acceder a la nube."); }
+  };
+
+  async function actualizarDatalist() {
+    const datalist = document.getElementById('lista-pacientes');
+    datalist.innerHTML = '';
+    try {
+        const querySnapshot = await db.collection("pacientes").get();
+        querySnapshot.forEach((doc) => {
+            const p = doc.data();
+            const option = document.createElement('option');
+            option.value = `${p.inputs.nombreApellido} | DNI: ${doc.id}`;
+            datalist.appendChild(option);
+        });
+    } catch (e) { console.log("Error al cargar datalist:", e); }
   }
 
   function actualizarBotonesSeleccionados(groupId, value) {
@@ -661,24 +594,57 @@
     generarCronica();
   }
 
+  // ==========================================
+  // --- LÓGICA DE PDF (AUTO-AJUSTABLE) ---
+  // ==========================================
   async function createPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: "pt", format: "a4" });
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
-    const margin = 40;
-    let y = 40;
+    
+    const margin = 35; 
+    let y = 35;
     const colorPrimario = [23, 85, 244]; 
-    const colorFondoCaja = [238, 244, 255]; 
 
+    const val = id => document.getElementById(id)?.value || '';
+    const isChecked = id => document.getElementById(id)?.checked;
+    const getCheckedValues = (name) => Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(el => el.value).join(', ') || '---';
+
+    const addSectionTitle = (title, currentY) => {
+        if (currentY > pageHeight - 60) { doc.addPage(); currentY = margin; }
+        doc.setFillColor(...colorPrimario);
+        doc.rect(margin, currentY, pageWidth - margin * 2, 14, "F"); 
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.setTextColor(255, 255, 255);
+        doc.text(title, margin + 5, currentY + 10);
+        return currentY + 22; 
+    };
+
+    // Función mejorada: 'colWidth' evita que el texto invada la siguiente columna
+    const addField = (label, value, x, currentY, labelWidth = 60, colWidth = 0) => {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8); 
+        doc.setTextColor(50, 50, 50);
+        doc.text(label + ":", x, currentY);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(0, 0, 0);
+        let valStr = String(value || '---');
+        let maxW = colWidth > 0 ? colWidth - labelWidth : (pageWidth - margin) - (x + labelWidth);
+        let splitVal = doc.splitTextToSize(valStr, maxW);
+        doc.text(splitVal, x + labelWidth, currentY);
+        return splitVal.length * 10; // Devuelve la altura real que ocupó el texto
+    };
+
+    // LOGO Y CABECERA
     async function loadImage(url) {
       return new Promise((resolve) => {
         const img = new Image();
         img.crossOrigin = "anonymous";
         img.onload = () => {
           const canvasImg = document.createElement("canvas");
-          canvasImg.width = img.width;
-          canvasImg.height = img.height;
+          canvasImg.width = img.width; canvasImg.height = img.height;
           const ctxImg = canvasImg.getContext("2d");
           ctxImg.drawImage(img, 0, 0);
           resolve(canvasImg.toDataURL("image/png"));
@@ -688,61 +654,103 @@
     }
 
     const logoBase64 = await loadImage("https://i.imgur.com/EsZiIHa.jpeg");
-    doc.addImage(logoBase64, "PNG", margin, y - 5, 45, 45);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(22);
-    doc.setTextColor(45, 52, 54);
-    doc.text("Factores", margin + 55, y + 18);
-    doc.setTextColor(colorPrimario[0], colorPrimario[1], colorPrimario[2]);
-    doc.text("Humanos", margin + 150, y + 18);
+    doc.addImage(logoBase64, "PNG", margin, y - 5, 35, 35); 
+    doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.setTextColor(45, 52, 54);
+    doc.text("Factores", margin + 45, y + 15);
+    doc.setTextColor(...colorPrimario);
+    doc.text("Humanos", margin + 120, y + 15);
 
-    y += 28;
+    y += 22;
     const subTitle = "REPORTE DE INCIDENTE - SAME Buenos Aires - Argentina";
-    doc.setFontSize(9);
-    doc.setFillColor(colorPrimario[0], colorPrimario[1], colorPrimario[2]);
-    doc.roundedRect(margin + 55, y, doc.getTextWidth(subTitle) + 20, 16, 4, 4, "F");
+    doc.setFontSize(8); doc.setFillColor(...colorPrimario);
+    doc.roundedRect(margin + 45, y, doc.getTextWidth(subTitle) + 20, 14, 3, 3, "F");
     doc.setTextColor(255, 255, 255);
-    doc.text(subTitle, margin + 65, y + 11);
+    doc.text(subTitle, margin + 55, y + 10);
 
-    y += 50;
-    doc.setFontSize(10); doc.setTextColor(150); doc.text("DATOS GENERALES", margin, y);
-    y += 10;
-    doc.setFillColor(colorFondoCaja[0], colorFondoCaja[1], colorFondoCaja[2]);
-    doc.roundedRect(margin, y, pageWidth - (margin * 2), 45, 12, 12, "F");
+    y += 35; 
 
-    const colW = (pageWidth - (margin * 2)) / 4;
-    const labels = ["ÁMBITO", "FUNCIÓN", "AÑOS", "REFERENTE"];
-    const vals = [state.ambito || "---", document.getElementById('funcion').value || "---", document.getElementById('anios').value || "---", document.getElementById('referente').value || "---"];
+    // 1. DATOS INSTITUCIONALES (Una sola línea)
+    y = addSectionTitle("1. DATOS DEL PERSONAL", y);
+    let h1 = addField("Ámbito", state.ambito, margin, y, 40, 130);
+    let h2 = addField("Función", val('funcion'), margin + 130, y, 40, 130);
+    let h3 = addField("Antigüedad", val('anios') ? val('anios') + ' años' : '', margin + 260, y, 55, 110);
+    let h4 = addField("Referente", val('referente'), margin + 370, y, 50, 150);
+    y += Math.max(h1, h2, h3, h4) + 6;
 
-    labels.forEach((label, i) => {
-      doc.setFontSize(7); doc.setTextColor(150);
-      doc.text(label, margin + (colW * i) + 15, y + 18);
-      doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(0);
-      doc.text(String(vals[i]).toUpperCase(), margin + (colW * i) + 15, y + 32);
+    // 2. IDENTIFICACIÓN (Una sola línea)
+    y = addSectionTitle("2. IDENTIFICACIÓN DEL PACIENTE", y);
+    h1 = addField("Nombre", val('nombreApellido'), margin, y, 40, 230);
+    h2 = addField("DNI", val('dni'), margin + 230, y, 25, 110);
+    h3 = addField("Edad", val('edad') ? val('edad') + ' años' : '', margin + 340, y, 30, 80);
+    h4 = addField("Sexo", state.sexo, margin + 420, y, 30, 100); 
+    y += Math.max(h1, h2, h3, h4) + 6; 
+
+    // 3. LUGAR (Dos líneas, Fecha DD-MM-YYYY)
+    y = addSectionTitle("3. LUGAR / UBICACIÓN DEL INCIDENTE", y);
+    
+    let rawDate = val('fecha');
+    let fechaFormateada = rawDate ? rawDate.split('-').reverse().join('-') : '---';
+
+    // Línea 1
+    h1 = addField("Fecha", fechaFormateada, margin, y, 35, 140);
+    h2 = addField("Hora", val('hora'), margin + 140, y, 30, 110);
+    let cat = val('categoria'); if(cat === 'Otros') cat = `Otros (${val('categoria_otros')})`;
+    h3 = addField("Categoría", cat, margin + 250, y, 50, 270);
+    y += Math.max(h1, h2, h3) + 4;
+    
+    // Línea 2
+    h1 = addField("Dirección", val('direccion'), margin, y, 45, 200);
+    h2 = addField("En compañía", getCheckedValues('acompa'), margin + 200, y, 55, 180);
+    h3 = addField("Agresor ID.", document.querySelector('input[name="agresor"]:checked')?.value || '---', margin + 380, y, 65, 140);
+    y += Math.max(h1, h2, h3) + 6;
+
+    // 4. TRIAGE (Una sola línea)
+    y = addSectionTitle("4. VALORACIÓN CLÍNICA (TRIAGE)", y);
+    let triageSelected = Array.from(state.triage).join(', ').toUpperCase();
+    let manifList = [];
+    state.triage.forEach(color => {
+        let arr = Array.from(state.manifestaciones[color]);
+        if(arr.includes('Otra')) { arr[arr.indexOf('Otra')] = `Otra (${val('otra-'+color)})`; }
+        if(arr.length > 0) manifList.push(`${color.toUpperCase()}: ${arr.join(', ')}`);
     });
+    h1 = addField("Color Triage", triageSelected, margin, y, 60, 120);
+    h2 = addField("Manifestaciones", manifList.join(' | '), margin + 120, y, 75, 400);
+    y += Math.max(h1, h2) + 6;
 
-    y += 70;
-    doc.setFontSize(10); doc.setTextColor(150); doc.text("CRÓNICA Y EVOLUCIÓN", margin, y);
-    y += 15;
-    doc.setFont("helvetica", "normal"); doc.setTextColor(0); doc.setFontSize(9);
-    const cronicaLines = doc.splitTextToSize(document.getElementById('cronica').value, pageWidth - (margin * 2));
-    doc.text(cronicaLines, margin, y);
+    // 5. PRESTACIÓN (Dos líneas)
+    y = addSectionTitle("5. PRESTACIÓN Y PROSECUCIÓN", y);
+    // Línea 1
+    h1 = addField("Duración", val('duracion'), margin, y, 45, 150);
+    h2 = addField("Entrevista", document.querySelector('input[name="tipo_ent"]:checked')?.value || '---', margin + 150, y, 50, 150);
+    h3 = addField("Servicios", getCheckedValues('serv'), margin + 300, y, 45, 220);
+    y += Math.max(h1, h2, h3) + 4;
+    // Línea 2
+    let derivs = getCheckedValues('deriva');
+    if(derivs.includes('Otro')) derivs = derivs.replace('Otro', `Otro (${val('deriva_otro')})`);
+    h1 = addField("Derivación", derivs, margin, y, 50, 240);
+    h2 = addField("Comentarios", val('deriva_comentario'), margin + 240, y, 60, 280);
+    y += Math.max(h1, h2) + 6;
 
-    const sigX = pageWidth - margin - 180;
-    const sigY = pageHeight - margin - 100;
-    doc.setDrawColor(colorPrimario[0], colorPrimario[1], colorPrimario[2]);
-    doc.roundedRect(sigX, sigY, 180, 80, 10, 10, "S");
-    doc.addImage(canvas.toDataURL("image/png"), "PNG", sigX + 10, sigY + 5, 160, 60);
-    doc.text("FIRMA", sigX + 90, sigY + 75, { align: "center" });
+    // 6. SEGUIMIENTOS (Restaurado a líneas separadas)
+    y = addSectionTitle("6. SEGUIMIENTOS", y);
+    let segs = [];
+    if(isChecked('seg_primera')) segs.push("PRIMERA VEZ");
+    if(isChecked('seg_ulteriores')) segs.push(`ULTERIORES (${getCheckedValues('ult_op')})`);
+    y += addField("Estado", segs.join(' - ') || '---', margin, y, 45, 0) + 4;
+    y += addField("Observaciones", val('observaciones'), margin, y, 75, 0) + 12;
+
+    // 8. FIRMA (Compacta)
+    if (y > pageHeight - 80) { doc.addPage(); y = margin; }
+    const sigX = pageWidth - margin - 160;
+    doc.setDrawColor(...colorPrimario);
+    doc.roundedRect(sigX, y, 160, 60, 8, 8, "S");
+    const canvas = document.getElementById('signature');
+    doc.addImage(canvas.toDataURL("image/png"), "PNG", sigX + 5, y + 2, 150, 45);
+    doc.setFontSize(7); doc.setTextColor(100,100,100);
+    doc.text("FIRMA DEL PROFESIONAL", sigX + 80, y + 55, { align: "center" });
 
     return doc;
   }
-
-  document.getElementById('btn-copy').onclick = () => {
-    navigator.clipboard.writeText(document.getElementById('cronica').value);
-    alert('Texto copiado!');
-  };
-
   document.getElementById('btn-preview').onclick = async () => {
     const doc = await createPDF();
     window.open(doc.output('bloburl'), '_blank');
