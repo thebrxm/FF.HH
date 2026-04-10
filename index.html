@@ -387,10 +387,11 @@
  
     let acompaArr = [];
     document.querySelectorAll('[name="acompa"]:checked').forEach(c => acompaArr.push(c.value));
-    texto += `Categoria: ${val('categoria')} ${val('categoria')==='Otros'?'('+val('categoria_otros')+')':''} | Acompañamiento: ${acompaArr.join(', ') || 'Solo'}\n`;
-    texto += `AGRESORID: ${document.querySelector('[name="agresor"]:checked')?.value || 'No'}\n\n`;
+    texto += `Categoría: ${val('categoria')} ${val('categoria')==='Otros'?'('+val('categoria_otros')+')':''} | Acompañamiento: ${acompaArr.join(', ') || 'Solo'}\n`;
+    texto += `Agresor ID: ${document.querySelector('[name="agresor"]:checked')?.value || 'No'}\n\n`;
 
-    texto += `VALORACIÓN CLÍNICA (TRIAGE): ${Array.from(state.triage).join(', ').toUpperCase() || '---'}\n`;
+    texto += `--- VALORACIÓN CLÍNICA (TRIAGE) ---\n`;
+    if(state.triage.size === 0) texto += `Pendiente\n`;
     state.triage.forEach(color => {
       const mArr = Array.from(state.manifestaciones[color]);
       texto += `- ${color.toUpperCase()}: ${mArr.join(', ')}`;
@@ -595,49 +596,19 @@
   }
 
   // ==========================================
-  // --- LÓGICA DE PDF (AUTO-AJUSTABLE) ---
+  // --- LÓGICA DE PDF (NUEVO DISEÑO PNG) ---
   // ==========================================
   async function createPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: "pt", format: "a4" });
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
-    
-    const margin = 35; 
-    let y = 35;
-    const colorPrimario = [23, 85, 244]; 
+    const margin = 40; 
+    let y = 40;
 
     const val = id => document.getElementById(id)?.value || '';
-    const isChecked = id => document.getElementById(id)?.checked;
-    const getCheckedValues = (name) => Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(el => el.value).join(', ') || '---';
 
-    const addSectionTitle = (title, currentY) => {
-        if (currentY > pageHeight - 60) { doc.addPage(); currentY = margin; }
-        doc.setFillColor(...colorPrimario);
-        doc.rect(margin, currentY, pageWidth - margin * 2, 14, "F"); 
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(9);
-        doc.setTextColor(255, 255, 255);
-        doc.text(title, margin + 5, currentY + 10);
-        return currentY + 22; 
-    };
-
-    // Función mejorada: 'colWidth' evita que el texto invada la siguiente columna
-    const addField = (label, value, x, currentY, labelWidth = 60, colWidth = 0) => {
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(8); 
-        doc.setTextColor(50, 50, 50);
-        doc.text(label + ":", x, currentY);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(0, 0, 0);
-        let valStr = String(value || '---');
-        let maxW = colWidth > 0 ? colWidth - labelWidth : (pageWidth - margin) - (x + labelWidth);
-        let splitVal = doc.splitTextToSize(valStr, maxW);
-        doc.text(splitVal, x + labelWidth, currentY);
-        return splitVal.length * 10; // Devuelve la altura real que ocupó el texto
-    };
-
-    // LOGO Y CABECERA
+    // Utilidad para cargar la imagen del Logo
     async function loadImage(url) {
       return new Promise((resolve) => {
         const img = new Image();
@@ -653,104 +624,189 @@
       });
     }
 
+    // --- 1. CABECERA ---
     const logoBase64 = await loadImage("https://i.imgur.com/EsZiIHa.jpeg");
-    doc.addImage(logoBase64, "PNG", margin, y - 5, 35, 35); 
-    doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.setTextColor(45, 52, 54);
-    doc.text("Factores", margin + 45, y + 15);
-    doc.setTextColor(...colorPrimario);
-    doc.text("Humanos", margin + 120, y + 15);
-
-    y += 22;
-    const subTitle = "REPORTE DE INCIDENTE - SAME Buenos Aires - Argentina";
-    doc.setFontSize(8); doc.setFillColor(...colorPrimario);
-    doc.roundedRect(margin + 45, y, doc.getTextWidth(subTitle) + 20, 14, 3, 3, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.text(subTitle, margin + 55, y + 10);
-
-    y += 35; 
-
-    // 1. DATOS INSTITUCIONALES (Una sola línea)
-    y = addSectionTitle("1. DATOS DEL PERSONAL", y);
-    let h1 = addField("Ámbito", state.ambito, margin, y, 40, 130);
-    let h2 = addField("Función", val('funcion'), margin + 130, y, 40, 130);
-    let h3 = addField("Antigüedad", val('anios') ? val('anios') + ' años' : '', margin + 260, y, 55, 110);
-    let h4 = addField("Referente", val('referente'), margin + 370, y, 50, 150);
-    y += Math.max(h1, h2, h3, h4) + 6;
-
-    // 2. IDENTIFICACIÓN (Una sola línea)
-    y = addSectionTitle("2. IDENTIFICACIÓN DEL PACIENTE", y);
-    h1 = addField("Nombre", val('nombreApellido'), margin, y, 40, 230);
-    h2 = addField("DNI", val('dni'), margin + 230, y, 25, 110);
-    h3 = addField("Edad", val('edad') ? val('edad') + ' años' : '', margin + 340, y, 30, 80);
-    h4 = addField("Sexo", state.sexo, margin + 420, y, 30, 100); 
-    y += Math.max(h1, h2, h3, h4) + 6; 
-
-    // 3. LUGAR (Dos líneas, Fecha DD-MM-YYYY)
-    y = addSectionTitle("3. LUGAR / UBICACIÓN DEL INCIDENTE", y);
+    doc.addImage(logoBase64, "PNG", margin, y, 45, 45); 
     
+    // Título Principal
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(24);
+    doc.setTextColor(45, 52, 54);
+    doc.text("Factores", margin + 60, y + 20);
+    doc.setTextColor(23, 85, 244); // Azul primario
+    doc.text("Humanos", margin + 175, y + 20);
+
+    // Subtítulo (Píldora Azul)
+    const subTitleText = "REPORTE DE INCIDENTE";
+    doc.setFontSize(9);
+    doc.setFillColor(23, 85, 244);
+    doc.roundedRect(margin + 60, y + 30, doc.getTextWidth(subTitleText) + 20, 18, 9, 9, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.text(subTitleText, margin + 70, y + 42);
+
+    // Texto SAME
+    doc.setTextColor(45, 52, 54);
+    doc.setFont("helvetica", "bold");
+    doc.text("SAME Buenos Aires · Argentina", margin + doc.getTextWidth(subTitleText) + 90, y + 42);
+
+    y += 75; 
+
+    // --- 2. CAJA: ÁMBITO DE ACTUACIÓN ---
+    doc.setFillColor(248, 249, 250); // Gris claro
+    doc.roundedRect(margin, y, pageWidth - margin * 2, 55, 12, 12, "F");
+    
+    doc.setFontSize(8);
+    doc.setTextColor(160, 170, 181); // Gris texto
+    doc.setFont("helvetica", "bold");
+    
+    // Titulos
+    doc.text("ÁMBITO DE ACTUACIÓN", margin + 15, y + 20);
+    doc.text("FUNCIÓN", margin + 160, y + 20);
+    doc.text("ANTIGÜEDAD (AÑOS)", margin + 300, y + 20);
+    doc.text("REFERENTE", margin + 440, y + 20);
+
+    // Valores
+    doc.setFontSize(10);
+    doc.setTextColor(20, 20, 20);
+    doc.text(state.ambito || "N/A", margin + 15, y + 38);
+    doc.text(val('funcion') || "N/A", margin + 160, y + 38);
+    doc.text(val('anios') || "N/A", margin + 300, y + 38);
+    doc.text(val('referente') || "N/A", margin + 440, y + 38);
+
+    y += 75;
+
+    doc.setFillColor(240, 247, 255); // Fondo azul muy clarito
+    doc.setDrawColor(210, 230, 255); // Borde azul clarito
+    doc.roundedRect(margin, y, pageWidth - margin * 2, 100, 12, 12, "FD");
+
+    // LADO IZQUIERDO (Paciente)
+    doc.setTextColor(23, 85, 244);
+    doc.setFontSize(9);
+    doc.text("IDENTIFICACIÓN DEL PACIENTE", margin + 15, y + 25);
+    doc.setDrawColor(180, 210, 255);
+    doc.line(margin + 15, y + 32, margin + 240, y + 32); // Linea separadora
+
+    doc.setTextColor(10, 10, 10);
+    doc.setFontSize(16);
+    doc.text(val('nombreApellido').toUpperCase() || "SIN NOMBRE", margin + 15, y + 55);
+
+    doc.setFontSize(8);
+    doc.setTextColor(160, 170, 181);
+    doc.text("DNI: ", margin + 15, y + 80);
+    doc.setTextColor(10, 10, 10); doc.text(val('dni') || "---", margin + 35, y + 80);
+
+    doc.setTextColor(160, 170, 181);
+    doc.text("EDAD: ", margin + 100, y + 80);
+    doc.setTextColor(10, 10, 10); doc.text(val('edad') || "--", margin + 130, y + 80);
+
+    doc.setTextColor(160, 170, 181);
+    doc.text("SEXO: ", margin + 170, y + 80);
+    doc.setTextColor(10, 10, 10); doc.text(state.sexo.toUpperCase() || "-", margin + 200, y + 80);
+
+    doc.setTextColor(23, 85, 244);
+    doc.setFontSize(9);
+    const rightColX = margin + 270;
+    doc.text("DATOS DEL ESCENARIO", rightColX, y + 25);
+    doc.line(rightColX, y + 32, pageWidth - margin - 15, y + 32);
+
+    doc.setTextColor(10, 10, 10);
+    doc.setFontSize(10);
+    let ubiText = val('direccion') || "Ubicación no especificada";
+    doc.text("📍 " + ubiText, rightColX, y + 55);
+
     let rawDate = val('fecha');
     let fechaFormateada = rawDate ? rawDate.split('-').reverse().join('-') : '---';
 
-    // Línea 1
-    h1 = addField("Fecha", fechaFormateada, margin, y, 35, 140);
-    h2 = addField("Hora", val('hora'), margin + 140, y, 30, 110);
-    let cat = val('categoria'); if(cat === 'Otros') cat = `Otros (${val('categoria_otros')})`;
-    h3 = addField("Categoría", cat, margin + 250, y, 50, 270);
-    y += Math.max(h1, h2, h3) + 4;
+    doc.setFontSize(8);
+    doc.setTextColor(160, 170, 181);
+    doc.text("FECHA:", rightColX, y + 80);
+    doc.setTextColor(10, 10, 10); doc.text(fechaFormateada, rightColX + 35, y + 80);
+
+    doc.setTextColor(160, 170, 181);
+    doc.text("HORA:", rightColX + 110, y + 80);
+    doc.setTextColor(10, 10, 10); doc.text(val('hora') || "---", rightColX + 140, y + 80);
+
+    y += 115;
+
+    let triageList = Array.from(state.triage);
+    let startX = margin;
     
-    // Línea 2
-    h1 = addField("Dirección", val('direccion'), margin, y, 45, 200);
-    h2 = addField("En compañía", getCheckedValues('acompa'), margin + 200, y, 55, 180);
-    h3 = addField("Agresor ID.", document.querySelector('input[name="agresor"]:checked')?.value || '---', margin + 380, y, 65, 140);
-    y += Math.max(h1, h2, h3) + 6;
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
 
-    // 4. TRIAGE (Una sola línea)
-    y = addSectionTitle("4. VALORACIÓN CLÍNICA (TRIAGE)", y);
-    let triageSelected = Array.from(state.triage).join(', ').toUpperCase();
-    let manifList = [];
-    state.triage.forEach(color => {
-        let arr = Array.from(state.manifestaciones[color]);
-        if(arr.includes('Otra')) { arr[arr.indexOf('Otra')] = `Otra (${val('otra-'+color)})`; }
-        if(arr.length > 0) manifList.push(`${color.toUpperCase()}: ${arr.join(', ')}`);
-    });
-    h1 = addField("Color Triage", triageSelected, margin, y, 60, 120);
-    h2 = addField("Manifestaciones", manifList.join(' | '), margin + 120, y, 75, 400);
-    y += Math.max(h1, h2) + 6;
+    if (triageList.length === 0) {
+        doc.setFillColor(200, 205, 210);
+        doc.roundedRect(startX, y, 115, 20, 10, 10, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.text("TRIAGE: PENDIENTE", startX + 15, y + 13);
+    } else {
+        triageList.forEach(color => {
+            let bgColor, textColor = [255, 255, 255];
+            if (color === 'rojo') { bgColor = [237, 30, 46]; } 
+            else if (color === 'amarillo') { bgColor = [251, 189, 46]; textColor = [0, 0, 0]; } 
+            else if (color === 'verde') { bgColor = [43, 145, 69]; }
 
-    // 5. PRESTACIÓN (Dos líneas)
-    y = addSectionTitle("5. PRESTACIÓN Y PROSECUCIÓN", y);
-    // Línea 1
-    h1 = addField("Duración", val('duracion'), margin, y, 45, 150);
-    h2 = addField("Entrevista", document.querySelector('input[name="tipo_ent"]:checked')?.value || '---', margin + 150, y, 50, 150);
-    h3 = addField("Servicios", getCheckedValues('serv'), margin + 300, y, 45, 220);
-    y += Math.max(h1, h2, h3) + 4;
-    // Línea 2
-    let derivs = getCheckedValues('deriva');
-    if(derivs.includes('Otro')) derivs = derivs.replace('Otro', `Otro (${val('deriva_otro')})`);
-    h1 = addField("Derivación", derivs, margin, y, 50, 240);
-    h2 = addField("Comentarios", val('deriva_comentario'), margin + 240, y, 60, 280);
-    y += Math.max(h1, h2) + 6;
+            let pillText = `TRIAGE: ${color.toUpperCase()}`;
+            let textWidth = doc.getTextWidth(pillText);
+            let pillWidth = textWidth + 30;
 
-    // 6. SEGUIMIENTOS (Restaurado a líneas separadas)
-    y = addSectionTitle("6. SEGUIMIENTOS", y);
-    let segs = [];
-    if(isChecked('seg_primera')) segs.push("PRIMERA VEZ");
-    if(isChecked('seg_ulteriores')) segs.push(`ULTERIORES (${getCheckedValues('ult_op')})`);
-    y += addField("Estado", segs.join(' - ') || '---', margin, y, 45, 0) + 4;
-    y += addField("Observaciones", val('observaciones'), margin, y, 75, 0) + 12;
+            doc.setFillColor(...bgColor);
+            doc.roundedRect(startX, y, pillWidth, 20, 10, 10, "F");
+            doc.setTextColor(...textColor);
+            doc.text(pillText, startX + 15, y + 13);
 
-    // 8. FIRMA (Compacta)
-    if (y > pageHeight - 80) { doc.addPage(); y = margin; }
-    const sigX = pageWidth - margin - 160;
-    doc.setDrawColor(...colorPrimario);
-    doc.roundedRect(sigX, y, 160, 60, 8, 8, "S");
-    const canvas = document.getElementById('signature');
-    doc.addImage(canvas.toDataURL("image/png"), "PNG", sigX + 5, y + 2, 150, 45);
-    doc.setFontSize(7); doc.setTextColor(100,100,100);
-    doc.text("FIRMA DEL PROFESIONAL", sigX + 80, y + 55, { align: "center" });
+            startX += pillWidth + 10;
+        });
+    }
+
+    y += 40;
+
+    doc.setFontSize(9); 
+    doc.setTextColor(160, 170, 181);
+    doc.setFont("helvetica", "bold");
+    doc.text("DESCRIPCIÓN DEL INCIDENTE", margin, y);
+
+    y += 20;
+
+    doc.setFontSize(10); 
+    doc.setTextColor(45, 52, 54); 
+    doc.setFont("helvetica", "normal");
+    
+    const cronicaText = document.getElementById('cronica').value;
+    const textLines = doc.splitTextToSize(cronicaText, pageWidth - margin * 2);
+
+    // Sistema para agregar hojas nuevas si el texto es muy largo
+    for (let i = 0; i < textLines.length; i++) {
+        if (y > pageHeight - 160) { // Si llega al fondo (dejando espacio para la firma)
+            doc.addPage();
+            y = margin;
+        }
+        doc.text(textLines[i], margin, y);
+        y += 14; 
+    }
+
+    if (y > pageHeight - 130) { 
+        doc.addPage(); 
+    }
+    
+    const sigY = pageHeight - 120;
+    const sigX = pageWidth - margin - 220;
+
+    doc.setDrawColor(210, 220, 230);
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(sigX, sigY, 220, 80, 15, 15, "S");
+
+    const canvasSig = document.getElementById('signature');
+    doc.addImage(canvasSig.toDataURL("image/png"), "PNG", sigX + 10, sigY + 5, 200, 50);
+
+    doc.setFontSize(7); 
+    doc.setTextColor(160, 170, 181); 
+    doc.setFont("helvetica", "bold");
+    doc.text("FIRMA DEL PROFESIONAL RESPONSABLE", sigX + 110, sigY + 70, { align: "center" });
 
     return doc;
   }
+
   document.getElementById('btn-preview').onclick = async () => {
     const doc = await createPDF();
     window.open(doc.output('bloburl'), '_blank');
