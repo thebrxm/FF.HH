@@ -712,7 +712,7 @@
     doc.setTextColor(10, 10, 10);
     doc.setFontSize(10);
     let ubiText = val('direccion') || "Ubicación no especificada";
-    doc.text("📍 " + ubiText, rightColX, y + 55);
+    doc.text(ubiText, rightColX, y + 55);
 
     let rawDate = val('fecha');
     let fechaFormateada = rawDate ? rawDate.split('-').reverse().join('-') : '---';
