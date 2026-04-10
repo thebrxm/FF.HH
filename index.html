@@ -659,22 +659,23 @@
     doc.setTextColor(160, 170, 181); // Gris texto
     doc.setFont("helvetica", "bold");
     
-    // Titulos
+    // Titulos (Posiciones ajustadas para dejar más espacio al Referente)
     doc.text("ÁMBITO DE ACTUACIÓN", margin + 15, y + 20);
-    doc.text("FUNCIÓN", margin + 160, y + 20);
-    doc.text("ANTIGÜEDAD (AÑOS)", margin + 300, y + 20);
-    doc.text("REFERENTE", margin + 440, y + 20);
+    doc.text("FUNCIÓN", margin + 145, y + 20);
+    doc.text("ANTIGÜEDAD (AÑOS)", margin + 265, y + 20);
+    doc.text("REFERENTE", margin + 380, y + 20);
 
-    // Valores
-    doc.setFontSize(10);
+    // Valores (Tamaño de fuente reducido a 9 y reposicionados)
+    doc.setFontSize(9);
     doc.setTextColor(20, 20, 20);
     doc.text(state.ambito || "N/A", margin + 15, y + 38);
-    doc.text(val('funcion') || "N/A", margin + 160, y + 38);
-    doc.text(val('anios') || "N/A", margin + 300, y + 38);
-    doc.text(val('referente') || "N/A", margin + 440, y + 38);
+    doc.text(val('funcion') || "N/A", margin + 145, y + 38);
+    doc.text(val('anios') || "N/A", margin + 265, y + 38);
+    doc.text(val('referente') || "N/A", margin + 380, y + 38);
 
     y += 75;
 
+    // --- 3. CAJA: PACIENTE Y ESCENARIO ---
     doc.setFillColor(240, 247, 255); // Fondo azul muy clarito
     doc.setDrawColor(210, 230, 255); // Borde azul clarito
     doc.roundedRect(margin, y, pageWidth - margin * 2, 100, 12, 12, "FD");
@@ -703,6 +704,7 @@
     doc.text("SEXO: ", margin + 170, y + 80);
     doc.setTextColor(10, 10, 10); doc.text(state.sexo.toUpperCase() || "-", margin + 200, y + 80);
 
+    // LADO DERECHO (Escenario)
     doc.setTextColor(23, 85, 244);
     doc.setFontSize(9);
     const rightColX = margin + 270;
@@ -712,6 +714,7 @@
     doc.setTextColor(10, 10, 10);
     doc.setFontSize(10);
     let ubiText = val('direccion') || "Ubicación no especificada";
+    // Eliminado el emoji del mapa para evitar el error de codificación
     doc.text(ubiText, rightColX, y + 55);
 
     let rawDate = val('fecha');
@@ -728,6 +731,7 @@
 
     y += 115;
 
+    // --- 4. TRIAGE (Píldoras de colores dinámicas) ---
     let triageList = Array.from(state.triage);
     let startX = margin;
     
@@ -735,11 +739,13 @@
     doc.setFont("helvetica", "bold");
 
     if (triageList.length === 0) {
+        // Píldora Gris (Pendiente)
         doc.setFillColor(200, 205, 210);
         doc.roundedRect(startX, y, 115, 20, 10, 10, "F");
         doc.setTextColor(255, 255, 255);
         doc.text("TRIAGE: PENDIENTE", startX + 15, y + 13);
     } else {
+        // Píldoras de colores seleccionados
         triageList.forEach(color => {
             let bgColor, textColor = [255, 255, 255];
             if (color === 'rojo') { bgColor = [237, 30, 46]; } 
@@ -755,12 +761,13 @@
             doc.setTextColor(...textColor);
             doc.text(pillText, startX + 15, y + 13);
 
-            startX += pillWidth + 10;
+            startX += pillWidth + 10; // Espacio para el siguiente (si lo hay)
         });
     }
 
     y += 40;
 
+    // --- 5. DESCRIPCIÓN DEL INCIDENTE ---
     doc.setFontSize(9); 
     doc.setTextColor(160, 170, 181);
     doc.setFont("helvetica", "bold");
@@ -775,9 +782,8 @@
     const cronicaText = document.getElementById('cronica').value;
     const textLines = doc.splitTextToSize(cronicaText, pageWidth - margin * 2);
 
-    // Sistema para agregar hojas nuevas si el texto es muy largo
     for (let i = 0; i < textLines.length; i++) {
-        if (y > pageHeight - 160) { // Si llega al fondo (dejando espacio para la firma)
+        if (y > pageHeight - 160) {
             doc.addPage();
             y = margin;
         }
@@ -785,16 +791,17 @@
         y += 14; 
     }
 
+    // --- 6. FIRMA DEL PROFESIONAL ---
     if (y > pageHeight - 130) { 
         doc.addPage(); 
     }
     
-    const sigY = pageHeight - 120;
-    const sigX = pageWidth - margin - 220;
+    const sigY = pageHeight - 120; 
+    const sigX = pageWidth - margin - 220; 
 
     doc.setDrawColor(210, 220, 230);
     doc.setFillColor(255, 255, 255);
-    doc.roundedRect(sigX, sigY, 220, 80, 15, 15, "S");
+    doc.roundedRect(sigX, sigY, 220, 80, 15, 15, "S"); 
 
     const canvasSig = document.getElementById('signature');
     doc.addImage(canvasSig.toDataURL("image/png"), "PNG", sigX + 10, sigY + 5, 200, 50);
